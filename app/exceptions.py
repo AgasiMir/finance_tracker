@@ -12,8 +12,12 @@ class WalletNotFoundException(FinanceTrackerException):
     detail = "Wallet Not Found"
 
 
-class WalletAlreadyExists(FinanceTrackerException):
+class WalletAlreadyExistsException(FinanceTrackerException):
     detail = "Wallet Already Exists"
+
+
+class InsufficientFundsException(FinanceTrackerException):
+    detail = "Insufficient Funds"
 
 
 class FinanceTrackerHTTPException(HTTPException):
@@ -31,8 +35,13 @@ class WalletNotFoundHTTPException(FinanceTrackerHTTPException):
         self.detail = f"Wallet {wallet_name!r} Not Found"
 
 
-class WalletAlreadyHTTPExists(FinanceTrackerHTTPException):
+class WalletAlreadyHTTPExistsException(FinanceTrackerHTTPException):
     status_code = status.HTTP_409_CONFLICT
 
     def __init__(self, wallet_name: str):
         self.detail = f"Wallet {wallet_name!r} Already Exists"
+
+
+class InsufficientFundsHTTPException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Insufficient Funds"

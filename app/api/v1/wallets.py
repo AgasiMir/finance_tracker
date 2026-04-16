@@ -6,9 +6,9 @@ from app.schemas import WalletCreate, WalletPublic
 from app.api.dependencies import WalletServiceDep
 from app.exceptions import (
     WalletNotFoundException,
-    WalletAlreadyExists,
+    WalletAlreadyExistsException,
     WalletNotFoundHTTPException,
-    WalletAlreadyHTTPExists,
+    WalletAlreadyHTTPExistsException,
 )
 
 router = APIRouter(
@@ -29,15 +29,15 @@ async def get_wallet_by_name(wallet_service: WalletServiceDep, wallet_name: str)
         return await wallet_service.get_wallet_by_name(wallet_name)
     except WalletNotFoundException:
         raise WalletNotFoundHTTPException(wallet_name)
-    except Exception as e:
-        return {"error": str(e)}
+    except Exception as err:
+        return {"error": str(err)}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=WalletPublic)
 async def create_wallet(wallet_service: WalletServiceDep, wallet: WalletCreate):
     try:
         return await wallet_service.create_wallet(wallet)
-    except WalletAlreadyExists:
-        raise WalletAlreadyHTTPExists(wallet.name)
-    except Exception as e:
-        return {"error": str(e)}
+    except WalletAlreadyExistsException:
+        raise WalletAlreadyHTTPExistsException(wallet.name)
+    except Exception as err:
+        return {"error": str(err)}

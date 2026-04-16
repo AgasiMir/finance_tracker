@@ -11,5 +11,5 @@ async def check_db(db: DBDep):
     try:
         version = await db.execute(text("SELECT version()"))
         return {"version": version.scalar()}
-    except Exception as e:
-        return {"error": str(e)}
+    except Exception as err:
+        return {"error": str(err)}
