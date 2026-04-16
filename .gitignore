@@ -14,6 +14,7 @@ wheels/
 logs/
 log/
 log.*
+!log.py
 
 # Tests
 .pytest_cache/

@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fastapi-limiter>=0.2.0",
     "fastapi[standard]>=0.135.3",
+    "loguru",
     "sqlalchemy>=2.0.49",
 ]
 

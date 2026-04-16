@@ -6,7 +6,10 @@ from sqlalchemy import MetaData
 from app.config import settings
 
 async_engine = create_async_engine(
-    url=settings.DB_URL, pool_pre_ping=True, pool_timeout=30, echo=True
+    url=settings.DB_URL,
+    pool_pre_ping=True,
+    pool_timeout=30,
+    echo=False,
 )
 
 async_session = async_sessionmaker(
