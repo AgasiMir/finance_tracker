@@ -1,3 +1,4 @@
+from decimal import Decimal
 from fastapi import HTTPException, status
 
 
@@ -17,7 +18,8 @@ class WalletAlreadyExistsException(FinanceTrackerException):
 
 
 class InsufficientFundsException(FinanceTrackerException):
-    detail = "Insufficient Funds"
+    def __init__(self, name: str, balance: Decimal):
+        self.detail = f"Insufficient Funds. Wallet {name!r} balance: {balance}"
 
 
 class FinanceTrackerHTTPException(HTTPException):
@@ -44,4 +46,6 @@ class WalletAlreadyHTTPExistsException(FinanceTrackerHTTPException):
 
 class InsufficientFundsHTTPException(FinanceTrackerHTTPException):
     status_code = status.HTTP_400_BAD_REQUEST
-    detail = "Insufficient Funds"
+
+    def __init__(self, message: str):
+        self.detail = message

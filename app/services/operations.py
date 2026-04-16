@@ -22,7 +22,7 @@ class OperationService:
         wallet = await self.operation_repo._get_wallet(operation.wallet_name)
 
         if wallet.balance < operation.amount:
-            raise InsufficientFundsException
+            raise InsufficientFundsException(wallet.name, wallet.balance)
 
         res = await self.operation_repo.withdraw_money(operation)
         return res
