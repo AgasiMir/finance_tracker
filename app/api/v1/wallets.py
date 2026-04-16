@@ -1,7 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from app.schemas import WalletCreate, WalletPublic
 from app.api.dependencies import WalletServiceDep
-from app.exceptions import WalletNotFoundException, WalletAlreadyExists
+from app.exceptions import (
+    WalletNotFoundException,
+    WalletAlreadyExists,
+    WalletNotFoundHTTPException,
+    WalletAlreadyHTTPExists,
+)
 
 router = APIRouter(prefix="/api/v1/wallet", tags=["💰💰💰"])
 
@@ -16,10 +21,7 @@ async def get_wallet_by_name(wallet_service: WalletServiceDep, wallet_name: str)
     try:
         return await wallet_service.get_wallet_by_name(wallet_name)
     except WalletNotFoundException:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Wallet {wallet_name!r} not found",
-        )
+        raise WalletNotFoundHTTPException(wallet_name)
     except Exception as e:
         return {"error": str(e)}
 
@@ -29,9 +31,6 @@ async def create_wallet(wallet_service: WalletServiceDep, wallet: WalletCreate):
     try:
         return await wallet_service.create_wallet(wallet)
     except WalletAlreadyExists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Wallet {wallet.name!r} already exists",
-        )
+        raise WalletAlreadyHTTPExists(wallet.name)
     except Exception as e:
         return {"error": str(e)}
