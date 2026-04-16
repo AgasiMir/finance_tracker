@@ -16,9 +16,21 @@ class Operation(Base):
     __tablename__ = "operations"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    wallet_name: Mapped[str] = mapped_column(String(127), nullable=False)
-    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    wallet_name: Mapped[str] = mapped_column(
+        String(127),
+        nullable=False,
+        index=True,
+    )
+    description: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        index=True,
+    )
+    amount: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        nullable=False,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         server_default=func.now(),
