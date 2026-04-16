@@ -3,7 +3,7 @@ from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 
 from app.schemas import WalletCreate, WalletPublic
-from app.api.dependencies import WalletServiceDep
+from app.api.dependencies import WalletServiceDep, PaginationDep
 from app.exceptions import (
     WalletNotFoundException,
     WalletAlreadyExistsException,
@@ -19,8 +19,12 @@ router = APIRouter(
 
 
 @router.get("", response_model=list[WalletPublic])
-async def get_wallets(wallet_service: WalletServiceDep):
-    return await wallet_service.get_wallets()
+async def get_wallets(wallet_service: WalletServiceDep, pagination: PaginationDep):
+    page = pagination.page
+    offset = (page - 1) * pagination.page_size
+    limit = pagination.page_size
+
+    return await wallet_service.get_wallets(offset, limit)
 
 
 @router.get("/{wallet_name}", response_model=WalletPublic)

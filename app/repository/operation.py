@@ -15,12 +15,16 @@ class OperationRepository:
     async def _get_wallet(self, wallet_name: str):
         return await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
 
-    async def get_all_operations(self, sort_value: str, dir: str):
+    async def get_all_operations(
+        self, sort_param: str, dir: str, offset: int, limit: int
+    ):
         if dir == "asc":
-            operations = await self.db.scalars(select(Operation).order_by(sort_value))
+            operations = await self.db.scalars(
+                select(Operation).order_by(sort_param).limit(limit).offset(offset)
+            )
         elif dir == "desc":
             operations = await self.db.scalars(
-                select(Operation).order_by(desc(sort_value))
+                select(Operation).order_by(desc(sort_param)).limit(limit).offset(offset)
             )
         return [self._from_db(obj) for obj in operations.all()]
 

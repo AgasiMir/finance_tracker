@@ -6,7 +6,7 @@ from app.repository.wallet import WalletRepository
 from app.repository.operation import OperationRepository
 from app.core.db_depends import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.utils.pagination import Pagination
 
 DBDep = Annotated[AsyncSession, Depends(get_db)]
 
@@ -38,3 +38,6 @@ async def get_operation_service_dep(
 
 WalletServiceDep = Annotated[WalletService, Depends(get_wallet_service_dep)]
 OpServiceDep = Annotated[OperationService, Depends(get_operation_service_dep)]
+
+
+PaginationDep = Annotated[Pagination, Depends()]

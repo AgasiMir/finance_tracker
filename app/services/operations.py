@@ -8,8 +8,12 @@ class OperationService:
     def __init__(self, operation_repo: OperationRepository):
         self.operation_repo = operation_repo
 
-    async def get_all_operations(self, sort_value: str, dir: str):
-        return await self.operation_repo.get_all_operations(sort_value, dir)
+    async def get_all_operations(
+        self, sort_param: str, dir: str, offset: int, limit: int
+    ):
+        return await self.operation_repo.get_all_operations(
+            sort_param, dir, offset, limit
+        )
 
     async def add_money(self, operation: OperationCreate):
         if not await self.operation_repo._get_wallet(operation.wallet_name):

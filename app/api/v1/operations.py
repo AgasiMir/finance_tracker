@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 
-from app.utils.sort_items import Sort, Direction
+from app.utils.sort_operations import Sort, Direction
 from app.schemas import OperationCreate, OperationPublic, OperationsHistory
-from app.api.dependencies import OpServiceDep
+from app.api.dependencies import OpServiceDep, PaginationDep
 
 from app.exceptions import (
     WalletNotFoundException,
@@ -21,8 +21,18 @@ router = APIRouter(
 
 
 @router.get("", response_model=list[OperationsHistory])
-async def get_my_operations(op_service: OpServiceDep, sort: Sort, dir: Direction):
-    return await op_service.get_all_operations(sort.name, dir.name)
+async def get_my_operations(
+    op_service: OpServiceDep,
+    sort: Sort,
+    dir: Direction,
+    pagination: PaginationDep,
+):
+    page = pagination.page
+    offset = (page - 1) * pagination.page_size
+    limit = pagination.page_size
+
+    return await op_service.get_all_operations(sort.name, dir.name, offset, limit)
+    # return await op_service.get_all_operations(sort.name, dir.name)
 
 
 @router.post("/add", response_model=OperationPublic)

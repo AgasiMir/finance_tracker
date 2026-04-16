@@ -12,15 +12,17 @@ class WalletRepository:
     def _from_db(model: Wallet) -> WalletPublic:
         return WalletPublic.model_validate(model)
 
-    async def is_wallet_exist(self, wallet_name: str) -> bool: 
+    async def is_wallet_exist(self, wallet_name: str) -> bool:
         return await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
 
     async def get_wallet_by_name(self, wallet_name) -> WalletPublic:
         wallet = await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
         return self._from_db(wallet)
 
-    async def get_all_wallets(self) -> list[WalletPublic]:
-        wallets = await self.db.scalars(select(Wallet))
+    async def get_all_wallets(self, offset, limit) -> list[WalletPublic]:
+        wallets = await self.db.scalars(
+            select(Wallet).order_by(Wallet.id).offset(offset).limit(limit)
+        )
         return [self._from_db(obj) for obj in wallets.all()]
 
     async def create_wallet(self, wallet: WalletCreate):

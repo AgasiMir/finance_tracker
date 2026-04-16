@@ -8,8 +8,8 @@ class WalletService:
     def __init__(self, wallet_repo: WalletRepository):
         self.wallet_repo = wallet_repo
 
-    async def get_wallets(self):
-        return await self.wallet_repo.get_all_wallets()
+    async def get_wallets(self, offset, limit):
+        return await self.wallet_repo.get_all_wallets(offset, limit)
 
     async def get_wallet_by_name(self, wallet_name: str):
         if not await self.wallet_repo.is_wallet_exist(wallet_name):
