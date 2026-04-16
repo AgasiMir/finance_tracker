@@ -1,0 +1,32 @@
+services:
+  
+  postgres:
+    image: postgres:17
+    container_name: finance_tracker_db
+    env_file: 
+      ".env.dev"
+    # environment:
+    #   POSTGRES_USER: ${DB_USER}
+    #   POSTGRES_PASSWORD: ${DB_PASSWORD}
+    #   POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "6432:5432"  
+    volumes:
+      - finance_tracker_data:/var/lib/postgresql/data
+    networks:
+      - finance_tracker_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+
+volumes:
+  finance_tracker_data:
+
+networks:
+  finance_tracker_network:
+    driver: bridge
+        
