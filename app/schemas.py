@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
@@ -22,20 +23,19 @@ class WalletCreate(BaseModel):
         return v
 
 
-class OperationRequestCreate(BaseModel):
+class OperationPublic(BaseModel):
+    message: str
+    description: str
+    new_balance: float
+
+
+class OperationCreate(BaseModel):
     wallet_name: str = Field(max_length=127)
-    amount: float
+    amount: Decimal
     description: str | None = Field(default=None, max_length=255)
 
     @field_validator("amount")
     def amount_must_be_positive(cls, v: float) -> float:
         if v <= 0:
             raise ValueError("Amount must be positive")
-        return v
-
-    @field_validator("wallet_name")
-    def wallet_name_not_empty(cls, v: str) -> str:
-        v = v.strip()
-        if len(v) <= 0:
-            raise ValueError("Wallet name cannot be empty")
         return v

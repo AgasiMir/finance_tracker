@@ -1,15 +1,20 @@
 from fastapi import APIRouter
-from app.schemas import OperationRequestCreate, WalletPublic
+from app.schemas import OperationCreate, OperationPublic
 from app.api.dependencies import OpServiceDep
+
+from app.exceptions import WalletNotFoundException, WalletNotFoundHTTPException
 
 router = APIRouter(prefix="/api/v1/operations", tags=["💵💶💷💴"])
 
 
-@router.post("/income", response_model=WalletPublic)
-async def add_income(operation: OperationRequestCreate, op_service: OpServiceDep):
-    return await op_service.add_income(operation)
+@router.post("/add", response_model=OperationPublic)
+async def add_income(operation: OperationCreate, op_service: OpServiceDep):
+    try:
+        return await op_service.add_money(operation)
+    except WalletNotFoundException:
+        raise WalletNotFoundHTTPException(operation.wallet_name)
 
 
-@router.post("/expense", response_model=WalletPublic)
-async def add_expense(operation: OperationRequestCreate, op_service: OpServiceDep):
+@router.post("/withdraw")
+async def add_expense(operation: OperationCreate, op_service: OpServiceDep):
     return await op_service.add_expense(operation)

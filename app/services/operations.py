@@ -1,33 +1,37 @@
 from fastapi import HTTPException, status
 
-from app.schemas import OperationRequestCreate
+from app.schemas import OperationCreate
 from app.repository.wallet import WalletRepository
+
+from app.exceptions import WalletNotFoundException
 
 
 class OperationService:
     def __init__(self, wallet_repo: WalletRepository):
         self.wallet_repo = wallet_repo
 
-    async def add_income(self, operation: OperationRequestCreate):
+    async def add_money(self, operation: OperationCreate):
         if not await self.wallet_repo.is_wallet_exist(operation.wallet_name):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Wallet {operation.wallet_name!r} not found",
-            )
+            raise WalletNotFoundException
 
-        new_balance = await self.wallet_repo.add_income(
-            operation.wallet_name, operation.amount
-        )
+        # wallet = await self.wallet_repo.get_wallet_by_name(operation.wallet_name)
 
-        return {
-            "message": "Income added",
-            "wallet": operation.wallet_name,
-            "amount": operation.amount,
-            "description": operation.description,
-            "new_balance": new_balance,
-        }
+        res = await self.wallet_repo.add_money(operation)
+        return res
 
-    async def add_expense(self, operation: OperationRequestCreate):
+        # new_balance = await self.wallet_repo.add_income(
+        #     operation.wallet_name, operation.amount
+        # )
+
+        # return {
+        #     "message": "Income added",
+        #     "wallet": operation.wallet_name,
+        #     "amount": operation.amount,
+        #     "description": operation.description,
+        #     "new_balance": new_balance,
+        # }
+
+    async def add_expense(self, operation: OperationCreate):
         if not await self.wallet_repo.is_wallet_exist(operation.wallet_name):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
