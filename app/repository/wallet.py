@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import Wallet, Operation
-from app.schemas import WalletPublic, WalletCreate, OperationCreate
+from app.models import Wallet
+from app.schemas import WalletPublic, WalletCreate
 
 
 class WalletRepository:
@@ -31,23 +31,3 @@ class WalletRepository:
         await self.db.refresh(db_wallet)
 
         return self._from_db(db_wallet)
-
-    async def add_money(self, operation: OperationCreate):
-        wallet = await self.db.scalar(
-            select(Wallet).where(Wallet.name == operation.wallet_name)
-        )
-
-        db_operation = Operation(**operation.model_dump(), wallet_id=wallet.id)
-        self.db.add(db_operation)
-
-        wallet.balance += operation.amount
-
-        await self.db.commit()
-        await self.db.refresh(db_operation)
-        await self.db.refresh(wallet)
-
-        return {
-            "message": f"Wallet {operation.wallet_name!r} balance increased by {operation.amount}",
-            "description": operation.description,
-            "new_balance": wallet.balance,
-        }

@@ -1,60 +1,41 @@
-from fastapi import HTTPException, status
-
 from app.schemas import OperationCreate
-from app.repository.wallet import WalletRepository
+from app.repository.operation import OperationRepository
 
 from app.exceptions import WalletNotFoundException
 
 
 class OperationService:
-    def __init__(self, wallet_repo: WalletRepository):
-        self.wallet_repo = wallet_repo
+    def __init__(self, operation_repo: OperationRepository):
+        self.operation_repo = operation_repo
 
     async def add_money(self, operation: OperationCreate):
-        if not await self.wallet_repo.is_wallet_exist(operation.wallet_name):
+        if not await self.operation_repo._get_wallet(operation.wallet_name):
             raise WalletNotFoundException
 
-        # wallet = await self.wallet_repo.get_wallet_by_name(operation.wallet_name)
-
-        res = await self.wallet_repo.add_money(operation)
+        res = await self.operation_repo.add_money(operation)
         return res
 
-        # new_balance = await self.wallet_repo.add_income(
-        #     operation.wallet_name, operation.amount
-        # )
+    # async def add_expense(self, operation: OperationCreate):
+    #     if not await self.wallet_repo.is_wallet_exist(operation.wallet_name):
+    #         raise WalletNotFoundException
 
-        # return {
-        #     "message": "Income added",
-        #     "wallet": operation.wallet_name,
-        #     "amount": operation.amount,
-        #     "description": operation.description,
-        #     "new_balance": new_balance,
-        # }
+    #     balance = await self.wallet_repo.get_wallet_balance_by_name(
+    #         operation.wallet_name
+    #     )
+    #     if balance < operation.amount:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail=f"Insufficient funds. Available: {balance}",
+    #         )
 
-    async def add_expense(self, operation: OperationCreate):
-        if not await self.wallet_repo.is_wallet_exist(operation.wallet_name):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Wallet {operation.wallet_name!r} not found",
-            )
+    #     new_balance = await self.wallet_repo.add_expence(
+    #         operation.wallet_name, operation.amount
+    #     )
 
-        balance = await self.wallet_repo.get_wallet_balance_by_name(
-            operation.wallet_name
-        )
-        if balance < operation.amount:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient funds. Available: {balance}",
-            )
-
-        new_balance = await self.wallet_repo.add_expence(
-            operation.wallet_name, operation.amount
-        )
-
-        return {
-            "message": "Expense added",
-            "wallet": operation.wallet_name,
-            "amount": operation.amount,
-            "description": operation.description,
-            "new_balance": new_balance,
-        }
+    #     return {
+    #         "message": "Expense added",
+    #         "wallet": operation.wallet_name,
+    #         "amount": operation.amount,
+    #         "description": operation.description,
+    #         "new_balance": new_balance,
+    #     }
