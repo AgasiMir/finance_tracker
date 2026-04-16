@@ -1,4 +1,7 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
+from pyrate_limiter import Duration, Limiter, Rate
+from fastapi_limiter.depends import RateLimiter
+
 from app.schemas import WalletCreate, WalletPublic
 from app.api.dependencies import WalletServiceDep
 from app.exceptions import (
@@ -8,7 +11,11 @@ from app.exceptions import (
     WalletAlreadyHTTPExists,
 )
 
-router = APIRouter(prefix="/api/v1/wallet", tags=["💰💰💰"])
+router = APIRouter(
+    prefix="/api/v1/wallet",
+    tags=["💰💰💰"],
+    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
+)
 
 
 @router.get("", response_model=list[WalletPublic])
