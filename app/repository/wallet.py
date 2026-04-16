@@ -12,9 +12,8 @@ class WalletRepository:
     def _from_db(model: Wallet) -> WalletPublic:
         return WalletPublic.model_validate(model)
 
-    async def is_wallet_exist(self, wallet_name: str) -> bool:
-        wallets = await self.db.scalars(select(Wallet.name))
-        return wallet_name in wallets.all()
+    async def is_wallet_exist(self, wallet_name: str) -> bool: 
+        return await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
 
     async def get_wallet_by_name(self, wallet_name) -> WalletPublic:
         wallet = await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))

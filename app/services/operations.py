@@ -19,10 +19,9 @@ class OperationService:
         return res
 
     async def withdraw_money(self, operation: OperationCreate):
-        if not await self.operation_repo._get_wallet(operation.wallet_name):
-            raise WalletNotFoundException
-
         wallet = await self.operation_repo._get_wallet(operation.wallet_name)
+        if not wallet:
+            raise WalletNotFoundException
 
         if wallet.balance < operation.amount:
             raise InsufficientFundsException(wallet.name, wallet.balance)

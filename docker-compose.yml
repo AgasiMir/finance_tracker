@@ -5,10 +5,6 @@ services:
     container_name: finance_tracker_db
     env_file: 
       ".env.dev"
-    # environment:
-    #   POSTGRES_USER: ${DB_USER}
-    #   POSTGRES_PASSWORD: ${DB_PASSWORD}
-    #   POSTGRES_DB: ${DB_NAME}
     ports:
       - "6432:5432"  
     volumes:
