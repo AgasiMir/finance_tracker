@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Wallet, Operation
 from app.schemas import OperationCreate, OperationsHistory
@@ -15,8 +15,13 @@ class OperationRepository:
     async def _get_wallet(self, wallet_name: str):
         return await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
 
-    async def get_all_operations(self):
-        operations = await self.db.scalars(select(Operation))
+    async def get_all_operations(self, sort_value: str, dir: str):
+        if dir == "asc":
+            operations = await self.db.scalars(select(Operation).order_by(sort_value))
+        elif dir == "desc":
+            operations = await self.db.scalars(
+                select(Operation).order_by(desc(sort_value))
+            )
         return [self._from_db(obj) for obj in operations.all()]
 
     async def add_money(self, operation: OperationCreate):
