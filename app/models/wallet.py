@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
 from decimal import Decimal
 from sqlalchemy import String, Numeric, CheckConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+
+if TYPE_CHECKING:
+    from app.models import Operation
 
 
 class Wallet(Base):
@@ -12,7 +17,11 @@ class Wallet(Base):
     name: Mapped[str] = mapped_column(String(127), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     balance: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), nullable=False, default=0.0
+        Numeric(10, 2),
+        nullable=False,
+        default=0.0,
     )
+
+    operations: Mapped[list["Operation"]] = relationship(back_populates="wallet")
 
     __table_args__ = (CheckConstraint("balance >= 0.0", name="positive_balance_check"),)
