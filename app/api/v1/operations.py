@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 
-from app.schemas import OperationCreate, OperationPublic
+from app.schemas import OperationCreate, OperationPublic, OperationsHistory
 from app.api.dependencies import OpServiceDep
 
 from app.exceptions import (
@@ -17,6 +17,11 @@ router = APIRouter(
     tags=["💵💶💷💴"],
     dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
 )
+
+
+@router.get("", response_model=list[OperationsHistory])
+async def get_my_operations(op_service: OpServiceDep):
+    return await op_service.get_all_operations()
 
 
 @router.post("/add", response_model=OperationPublic)

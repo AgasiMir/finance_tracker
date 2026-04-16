@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
@@ -39,3 +40,13 @@ class OperationCreate(BaseModel):
         if v <= 0:
             raise ValueError("Amount must be positive")
         return v
+
+
+class OperationsHistory(BaseModel):
+    id: int
+    wallet_name: str
+    amount: float
+    created_at: datetime
+    description: str
+
+    model_config = ConfigDict(from_attributes=True)
