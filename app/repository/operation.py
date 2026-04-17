@@ -23,10 +23,11 @@ class OperationRepository:
         limit: int,
         filter: str | None = None,
     ):
-        if filter is None:
-            filters = []
-        else:
-            filters = [Operation.type == filter]
+        filters = []
+
+        if filter:
+            filters.append(Operation.type == filter)
+
         if dir == "asc":
             operations = await self.db.scalars(
                 select(Operation)
