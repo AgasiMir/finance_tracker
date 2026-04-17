@@ -31,6 +31,11 @@ class Operation(Base):
         nullable=False,
         index=True,
     )
+    type: Mapped[str] = mapped_column(
+        String(7),
+        nullable=False,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         server_default=func.now(),

@@ -9,10 +9,19 @@ class OperationService:
         self.operation_repo = operation_repo
 
     async def get_all_operations(
-        self, sort_param: str, dir: str, offset: int, limit: int
+        self,
+        sort_param: str,
+        dir: str,
+        offset: int,
+        limit: int,
+        filter: str | None = None,
     ):
         return await self.operation_repo.get_all_operations(
-            sort_param, dir, offset, limit
+            sort_param,
+            dir,
+            offset,
+            limit,
+            filter,
         )
 
     async def add_money(self, operation: OperationCreate):

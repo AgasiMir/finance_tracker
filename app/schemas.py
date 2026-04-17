@@ -48,5 +48,6 @@ class OperationsHistory(BaseModel):
     amount: float
     created_at: datetime
     description: str
+    type: str
 
     model_config = ConfigDict(from_attributes=True)

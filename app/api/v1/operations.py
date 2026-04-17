@@ -3,6 +3,7 @@ from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 
 from app.utils.sort_operations import Sort, Direction
+from app.utils.operations_filter import Filter
 from app.schemas import OperationCreate, OperationPublic, OperationsHistory
 from app.api.dependencies import OpServiceDep, PaginationDep
 
@@ -26,13 +27,21 @@ async def get_my_operations(
     sort: Sort,
     dir: Direction,
     pagination: PaginationDep,
+    filter: Filter | None = None,
 ):
     page = pagination.page
     offset = (page - 1) * pagination.page_size
     limit = pagination.page_size
 
-    return await op_service.get_all_operations(sort.name, dir.name, offset, limit)
-    # return await op_service.get_all_operations(sort.name, dir.name)
+    filter = filter.value if filter else None
+
+    return await op_service.get_all_operations(
+        sort.name,
+        dir.name,
+        offset,
+        limit,
+        filter,
+    )
 
 
 @router.post("/add", response_model=OperationPublic)
