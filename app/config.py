@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_NAME: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
+    # @property
+    # def REDIS_URL(self):
+    #     url = f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
+    #     return url
+
     @property
     def DB_URL(self):
         url = f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
