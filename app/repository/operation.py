@@ -1,7 +1,7 @@
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Wallet, Operation
-from app.schemas import OperationCreate, OperationsHistory
+from app.schemas import OperationCreate, OperationsHistory, TransferMoneyCreate
 
 
 class OperationRepository:
@@ -84,4 +84,18 @@ class OperationRepository:
             "message": f"Wallet {operation.wallet_name!r} balance decreased by {operation.amount}",
             "description": operation.description,
             "new_balance": wallet.balance,
+        }
+
+    async def transfer_money(self, transfer: TransferMoneyCreate):
+        wallet_from = await self._get_wallet(transfer.wallet_from)
+        wallet_to = await self._get_wallet(transfer.wallet_to)
+
+        wallet_from.balance -= transfer.amount
+        wallet_to.balance += transfer.amount
+
+        await self.db.commit()
+
+        return {
+            "add": f"Wallet {transfer.wallet_to!r} + {transfer.amount} = {wallet_to.balance}",
+            "withdraw": f"Wallet {transfer.wallet_from!r} - {transfer.amount} = {wallet_from.balance}",
         }

@@ -8,7 +8,7 @@ from loguru import logger
 
 logger.add(
     sink="logs/log.info",
-    rotation="2048 KB",
+    rotation="10240 KB",
     compression="zip",
     enqueue=True,
     colorize=False,

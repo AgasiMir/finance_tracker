@@ -1,25 +1,4 @@
-from decimal import Decimal
 from fastapi import HTTPException, status
-
-
-class FinanceTrackerException(Exception):
-    detail = "Unknown Exception"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(self.detail, *args, **kwargs)
-
-
-class WalletNotFoundException(FinanceTrackerException):
-    detail = "Wallet Not Found"
-
-
-class WalletAlreadyExistsException(FinanceTrackerException):
-    detail = "Wallet Already Exists"
-
-
-class InsufficientFundsException(FinanceTrackerException):
-    def __init__(self, name: str, balance: Decimal):
-        self.detail = f"Insufficient Funds. Wallet {name!r} balance: {balance}"
 
 
 class FinanceTrackerHTTPException(HTTPException):
@@ -33,8 +12,8 @@ class FinanceTrackerHTTPException(HTTPException):
 class WalletNotFoundHTTPException(FinanceTrackerHTTPException):
     status_code = status.HTTP_404_NOT_FOUND
 
-    def __init__(self, wallet_name: str):
-        self.detail = f"Wallet {wallet_name!r} Not Found"
+    def __init__(self, message: str):
+        self.detail = message
 
 
 class WalletAlreadyHTTPExistsException(FinanceTrackerHTTPException):
@@ -49,3 +28,8 @@ class InsufficientFundsHTTPException(FinanceTrackerHTTPException):
 
     def __init__(self, message: str):
         self.detail = message
+
+
+class SameWalletHTTPException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Wallets Shoud Not Be The Same"

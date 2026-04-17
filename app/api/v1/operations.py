@@ -4,14 +4,24 @@ from fastapi_limiter.depends import RateLimiter
 
 from app.utils.sort_operations import Sort, Direction
 from app.utils.operations_filter import Filter
-from app.schemas import OperationCreate, OperationPublic, OperationsHistory
+from app.schemas import (
+    OperationCreate,
+    OperationPublic,
+    OperationsHistory,
+    TransferMoneyCreate,
+    TransferMoneyPublic,
+)
 from app.api.dependencies import OpServiceDep, PaginationDep
 
-from app.exceptions import (
+from app.exceptions.python_exceptions import (
     WalletNotFoundException,
-    WalletNotFoundHTTPException,
     InsufficientFundsException,
+    SameWalletException,
+)
+from app.exceptions.fastapi_exceptions import (
+    SameWalletHTTPException,
     InsufficientFundsHTTPException,
+    WalletNotFoundHTTPException,
 )
 
 router = APIRouter(
@@ -48,8 +58,8 @@ async def get_my_operations(
 async def add_money(operation: OperationCreate, op_service: OpServiceDep):
     try:
         return await op_service.add_money(operation)
-    except WalletNotFoundException:
-        raise WalletNotFoundHTTPException(operation.wallet_name)
+    except WalletNotFoundException as err:
+        raise WalletNotFoundHTTPException(err.detail)
     except Exception as err:
         raise err
 
@@ -58,9 +68,23 @@ async def add_money(operation: OperationCreate, op_service: OpServiceDep):
 async def withdraw_money(operation: OperationCreate, op_service: OpServiceDep):
     try:
         return await op_service.withdraw_money(operation)
-    except WalletNotFoundException:
-        raise WalletNotFoundHTTPException(operation.wallet_name)
+    except WalletNotFoundException as err:
+        raise WalletNotFoundHTTPException(err.detail)
     except InsufficientFundsException as err:
         raise InsufficientFundsHTTPException(err.detail)
+    except Exception as err:
+        raise err
+
+
+@router.post("/transfer", response_model=TransferMoneyPublic)
+async def transfer_money(transfer: TransferMoneyCreate, op_service: OpServiceDep):
+    try:
+        return await op_service.transfer_money(transfer)
+    except WalletNotFoundException as err:
+        raise WalletNotFoundHTTPException(err.detail)
+    except InsufficientFundsException as err:
+        raise InsufficientFundsHTTPException(err.detail)
+    except SameWalletException:
+        raise SameWalletHTTPException
     except Exception as err:
         raise err

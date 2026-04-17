@@ -4,9 +4,12 @@ from fastapi_limiter.depends import RateLimiter
 
 from app.schemas import WalletCreate, WalletPublic
 from app.api.dependencies import WalletServiceDep, PaginationDep
-from app.exceptions import (
+from app.exceptions.python_exceptions import (
     WalletNotFoundException,
     WalletAlreadyExistsException,
+)
+
+from app.exceptions.fastapi_exceptions import (
     WalletNotFoundHTTPException,
     WalletAlreadyHTTPExistsException,
 )
@@ -31,8 +34,8 @@ async def get_wallets(wallet_service: WalletServiceDep, pagination: PaginationDe
 async def get_wallet_by_name(wallet_service: WalletServiceDep, wallet_name: str):
     try:
         return await wallet_service.get_wallet_by_name(wallet_name)
-    except WalletNotFoundException:
-        raise WalletNotFoundHTTPException(wallet_name)
+    except WalletNotFoundException as err:
+        raise WalletNotFoundHTTPException(err.detail)
     except Exception as err:
         return {"error": str(err)}
 

@@ -1,7 +1,10 @@
 from app.schemas import WalletCreate
 from app.repository.wallet import WalletRepository
 
-from app.exceptions import WalletNotFoundException, WalletAlreadyExistsException
+from app.exceptions.python_exceptions import (
+    WalletNotFoundException,
+    WalletAlreadyExistsException,
+)
 
 
 class WalletService:
@@ -13,7 +16,7 @@ class WalletService:
 
     async def get_wallet_by_name(self, wallet_name: str):
         if not await self.wallet_repo.is_wallet_exist(wallet_name):
-            raise WalletNotFoundException
+            raise WalletNotFoundException(wallet_name)
 
         return await self.wallet_repo.get_wallet_by_name(wallet_name)
 

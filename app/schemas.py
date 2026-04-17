@@ -51,3 +51,20 @@ class OperationsHistory(BaseModel):
     type: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TransferMoneyCreate(BaseModel):
+    wallet_from: str
+    wallet_to: str
+    amount: Decimal
+
+    @field_validator("amount")
+    def amount_must_be_positive(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+
+
+class TransferMoneyPublic(BaseModel):
+    add: str
+    withdraw: str
