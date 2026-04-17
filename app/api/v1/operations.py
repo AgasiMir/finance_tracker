@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
+from fastapi_cache.decorator import cache
 
 from app.utils.sort_operations import Sort, Direction
 from app.utils.operations_filter import Filter
@@ -32,6 +33,7 @@ router = APIRouter(
 
 
 @router.get("", response_model=list[OperationsHistory])
+@cache(expire=30)
 async def get_my_operations(
     op_service: OpServiceDep,
     sort: Sort,
