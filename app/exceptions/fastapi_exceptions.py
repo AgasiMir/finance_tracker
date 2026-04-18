@@ -33,3 +33,20 @@ class InsufficientFundsHTTPException(FinanceTrackerHTTPException):
 class SameWalletHTTPException(FinanceTrackerHTTPException):
     status_code = status.HTTP_400_BAD_REQUEST
     detail = "Wallets Shoud Not Be The Same"
+
+
+class UserAlreadyHTTPExistsException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = "User With Such Email Already Exists"
+
+
+class IncorrectCredentialsHTTPException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Incorrect email or password"
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class CredentialsHTTPException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Could not validate refresh token"
+    headers = {"WWW-Authenticate": "Bearer"}

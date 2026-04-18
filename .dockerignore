@@ -9,4 +9,5 @@ README.md
 tests/
 .git
 *.log
+!log.py
 .env*

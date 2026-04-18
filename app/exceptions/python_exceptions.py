@@ -26,3 +26,15 @@ class InsufficientFundsException(FinanceTrackerException):
 
 class SameWalletException(FinanceTrackerException):
     detail = "Wallets Shoud Not Be The Same"
+
+
+class UserAlreadyExistsException(FinanceTrackerException):
+    detail = "User With Such Email Already Exists"
+
+
+class IncorrectCredentialsException(FinanceTrackerException):
+    detail = "Incorrect Email Or Password"
+
+
+class CredentialsException(FinanceTrackerException):
+    detail = "Could not validate refresh token"

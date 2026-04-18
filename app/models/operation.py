@@ -45,6 +45,7 @@ class Operation(Base):
     wallet_id: Mapped[int] = mapped_column(
         ForeignKey("wallets.id", ondelete="RESTRICT"),
         nullable=False,
+        index=True,
     )
 
     wallet: Mapped["Wallet"] = relationship(back_populates="operations")

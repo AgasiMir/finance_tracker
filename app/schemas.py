@@ -1,13 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict, EmailStr
 
 
 class WalletPublic(BaseModel):
     id: int
     name: str
     balance: float
-    description: str | None = None
+    description: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -68,3 +68,20 @@ class TransferMoneyCreate(BaseModel):
 class TransferMoneyPublic(BaseModel):
     add: str
     withdraw: str
+
+
+class UserCreate(BaseModel):
+    email: EmailStr = Field(max_length=255, description="Email пользователя")
+    password: str = Field(
+        min_length=8,
+        max_length=255,
+        description="Пароль (минимум 8 символов, максимум - 255)",
+    )
+
+
+class UserPublic(BaseModel):
+    id: int
+    email: EmailStr
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)

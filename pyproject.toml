@@ -7,10 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
+    "bcrypt==4.0.1",
     "fastapi-cache2>=0.2.2",
     "fastapi-limiter>=0.2.0",
     "fastapi[standard]>=0.135.3",
     "loguru",
+    "passlib>=1.7.4",
+    "pyjwt>=2.12.1",
+    "python-multipart>=0.0.26",
     "redis>=7.4.0",
     "sqlalchemy>=2.0.49",
 ]

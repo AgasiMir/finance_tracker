@@ -12,8 +12,13 @@ class OperationRepository:
     def _from_db(model: Operation) -> OperationsHistory:
         return OperationsHistory.model_validate(model)
 
-    async def _get_wallet(self, wallet_name: str):
-        return await self.db.scalar(select(Wallet).where(Wallet.name == wallet_name))
+    async def _get_wallet(self, wallet_name: str, user_id) -> Wallet:
+        return await self.db.scalar(
+            select(Wallet).where(
+                Wallet.name == wallet_name,
+                Wallet.user_id == user_id,
+            )
+        )
 
     async def get_all_operations(
         self,
@@ -21,8 +26,9 @@ class OperationRepository:
         dir: str,
         offset: int,
         limit: int,
+        user_id: int,
         filter: str | None = None,
-    ):
+    ) -> list[OperationsHistory]:
         filters = []
 
         if filter:
@@ -31,7 +37,8 @@ class OperationRepository:
         if dir == "asc":
             operations = await self.db.scalars(
                 select(Operation)
-                .where(*filters)
+                .join(Wallet, Operation.wallet_id == Wallet.id)
+                .where(*filters, Wallet.user_id == user_id)
                 .order_by(sort_param)
                 .limit(limit)
                 .offset(offset)
@@ -39,15 +46,16 @@ class OperationRepository:
         elif dir == "desc":
             operations = await self.db.scalars(
                 select(Operation)
-                .where(*filters)
+                .join(Operation.wallet)
+                .where(*filters, Wallet.user_id == user_id)
                 .order_by(desc(sort_param))
                 .limit(limit)
                 .offset(offset)
             )
         return [self._from_db(obj) for obj in operations.all()]
 
-    async def add_money(self, operation: OperationCreate):
-        wallet = await self._get_wallet(operation.wallet_name)
+    async def add_money(self, operation: OperationCreate, user_id: int) -> dict:
+        wallet = await self._get_wallet(operation.wallet_name, user_id)
 
         db_operation = Operation(
             **operation.model_dump(), wallet_id=wallet.id, type="income"
@@ -66,8 +74,8 @@ class OperationRepository:
             "new_balance": wallet.balance,
         }
 
-    async def withdraw_money(self, operation: OperationCreate):
-        wallet = await self._get_wallet(operation.wallet_name)
+    async def withdraw_money(self, operation: OperationCreate, user_id: int) -> dict:
+        wallet = await self._get_wallet(operation.wallet_name, user_id)
 
         db_operation = Operation(
             **operation.model_dump(), wallet_id=wallet.id, type="expense"
@@ -86,9 +94,9 @@ class OperationRepository:
             "new_balance": wallet.balance,
         }
 
-    async def transfer_money(self, transfer: TransferMoneyCreate):
-        wallet_from = await self._get_wallet(transfer.wallet_from)
-        wallet_to = await self._get_wallet(transfer.wallet_to)
+    async def transfer_money(self, transfer: TransferMoneyCreate, user_id: int) -> dict:
+        wallet_from = await self._get_wallet(transfer.wallet_from, user_id)
+        wallet_to = await self._get_wallet(transfer.wallet_to, user_id)
 
         wallet_from.balance -= transfer.amount
         wallet_to.balance += transfer.amount
