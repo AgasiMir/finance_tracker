@@ -7,6 +7,7 @@ __pycache__/
 .dockerignore
 README.md
 tests/
+htmlcov/
 .git
 *.log
 !log.py

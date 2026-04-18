@@ -6,7 +6,7 @@ from sqlalchemy import text
 router = APIRouter(prefix="/handlers", tags=["handlers 🔧🔧🔧"])
 
 
-@router.get("/check_db")
+@router.get("/check-db")
 async def check_db(db: DBDep):
     try:
         version = await db.execute(text("SELECT version()"))

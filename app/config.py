@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    environment: Literal["DEV", "TEST", "PROD"] = "DEV"
+    ENVIRONMENT: Literal["DEV", "TEST", "PROD"] = "DEV"
 
     DB_DRIVER: str
     DB_USER: str
