@@ -18,11 +18,17 @@ class OperationRepository:
         return OperationsHistory.model_validate(model)
 
     async def _get_wallet(self, wallet_name: str, user_id) -> Wallet:
+        """
+        Получает кошелек с блокировкой FOR UPDATE.
+        Используется только в контексте операций изменения баланса.
+        """
         return await self.db.scalar(
-            select(Wallet).where(
+            select(Wallet)
+            .where(
                 Wallet.name == wallet_name,
                 Wallet.user_id == user_id,
             )
+            .with_for_update()
         )
 
     async def get_all_operations(
