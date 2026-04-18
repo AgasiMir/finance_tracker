@@ -2,6 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Wallet
 from app.schemas import WalletPublic, WalletCreate
+from app.exceptions.python_exceptions import (
+    WalletNotFoundException,
+    WalletAlreadyExistsException,
+)
 
 
 class WalletRepository:
@@ -27,6 +31,9 @@ class WalletRepository:
                 Wallet.user_id == user_id,
             )
         )
+        if not wallet:
+            raise WalletNotFoundException(wallet_name)
+
         return self._from_db(wallet)
 
     async def get_all_wallets(self, offset, limit, user_id: int) -> list[WalletPublic]:
@@ -40,6 +47,9 @@ class WalletRepository:
         return [self._from_db(obj) for obj in wallets.all()]
 
     async def create_wallet(self, wallet: WalletCreate, user_id: int) -> WalletPublic:
+        if await self.is_wallet_exist(wallet.name, user_id):
+            raise WalletAlreadyExistsException
+
         db_wallet = Wallet(**wallet.model_dump(), user_id=user_id)
         self.db.add(db_wallet)
         await self.db.commit()

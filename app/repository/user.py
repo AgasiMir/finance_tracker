@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.exceptions.python_exceptions import UserAlreadyExistsException
 from app.models import User
 from app.schemas import UserCreate, UserPublic
 from app.auth import create_access_token, create_refresh_token, hash_password
@@ -17,6 +18,9 @@ class UserRepository:
         return await self.db.scalar(select(User).where(User.email == email))
 
     async def create_user(self, user: UserCreate) -> UserPublic:
+        if await self.get_user_by_email(user.email):
+            raise UserAlreadyExistsException
+
         db_user = User(
             email=user.email,
             hashed_password=hash_password(user.password),

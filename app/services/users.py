@@ -4,7 +4,6 @@ from app.auth import verify_password
 from app.repository.user import UserRepository
 from app.schemas import UserCreate, UserPublic
 from app.exceptions.python_exceptions import (
-    UserAlreadyExistsException,
     IncorrectCredentialsException,
     CredentialsException,
 )
@@ -15,8 +14,6 @@ class UserService:
         self.user_repo = user_repo
 
     async def create_user(self, user: UserCreate) -> UserPublic:
-        if await self.user_repo.get_user_by_email(user.email):
-            raise UserAlreadyExistsException
 
         return await self.user_repo.create_user(user)
 

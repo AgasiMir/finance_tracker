@@ -2,6 +2,11 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Wallet, Operation
 from app.schemas import OperationCreate, OperationsHistory, TransferMoneyCreate
+from app.exceptions.python_exceptions import (
+    InsufficientFundsException,
+    SameWalletException,
+    WalletNotFoundException,
+)
 
 
 class OperationRepository:
@@ -54,11 +59,18 @@ class OperationRepository:
             )
         return [self._from_db(obj) for obj in operations.all()]
 
-    async def add_money(self, operation: OperationCreate, user_id: int) -> dict:
+    async def add_money(
+        self,
+        operation: OperationCreate,
+        user_id: int,
+        type: str = "income",
+    ) -> dict:
         wallet = await self._get_wallet(operation.wallet_name, user_id)
+        if not wallet:
+            raise WalletNotFoundException(operation.wallet_name)
 
         db_operation = Operation(
-            **operation.model_dump(), wallet_id=wallet.id, type="income"
+            **operation.model_dump(), wallet_id=wallet.id, type=type
         )
         self.db.add(db_operation)
 
@@ -74,11 +86,21 @@ class OperationRepository:
             "new_balance": wallet.balance,
         }
 
-    async def withdraw_money(self, operation: OperationCreate, user_id: int) -> dict:
+    async def withdraw_money(
+        self,
+        operation: OperationCreate,
+        user_id: int,
+        type: str = "expense",
+    ) -> dict:
         wallet = await self._get_wallet(operation.wallet_name, user_id)
+        if not wallet:
+            raise WalletNotFoundException(operation.wallet_name)
+
+        if wallet.balance < operation.amount:
+            raise InsufficientFundsException(wallet.name, wallet.balance)
 
         db_operation = Operation(
-            **operation.model_dump(), wallet_id=wallet.id, type="expense"
+            **operation.model_dump(), wallet_id=wallet.id, type=type
         )
         self.db.add(db_operation)
 
@@ -96,7 +118,23 @@ class OperationRepository:
 
     async def transfer_money(self, transfer: TransferMoneyCreate, user_id: int) -> dict:
         wallet_from = await self._get_wallet(transfer.wallet_from, user_id)
+
+        if not wallet_from:
+            raise WalletNotFoundException(transfer.wallet_from)
+
         wallet_to = await self._get_wallet(transfer.wallet_to, user_id)
+
+        if not wallet_to:
+            raise WalletNotFoundException(transfer.wallet_to)
+
+        if wallet_from.name == wallet_to.name:
+            raise SameWalletException
+
+        if wallet_from.balance < transfer.amount:
+            raise InsufficientFundsException(
+                transfer.wallet_from,
+                wallet_from.balance,
+            )
 
         wallet_from.balance -= transfer.amount
         wallet_to.balance += transfer.amount

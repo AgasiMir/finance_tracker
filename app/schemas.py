@@ -7,7 +7,7 @@ class WalletPublic(BaseModel):
     id: int
     name: str
     balance: float
-    description: str
+    description: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -26,7 +26,7 @@ class WalletCreate(BaseModel):
 
 class OperationPublic(BaseModel):
     message: str
-    description: str
+    description: str | None = None
     new_balance: float
 
 
@@ -47,7 +47,7 @@ class OperationsHistory(BaseModel):
     wallet_name: str
     amount: float
     created_at: datetime
-    description: str
+    description: str | None = None
     type: str
 
     model_config = ConfigDict(from_attributes=True)
