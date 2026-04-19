@@ -52,7 +52,6 @@ class WalletRepository:
 
         db_wallet = Wallet(**wallet.model_dump(), user_id=user_id)
         self.db.add(db_wallet)
-        await self.db.commit()
-        await self.db.refresh(db_wallet)
+        await self.db.flush()
 
         return self._from_db(db_wallet)

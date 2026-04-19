@@ -1,10 +1,10 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import WalletCreate
 from app.models import Wallet, User
+from app.uow.uow import DBManager
 
 
-async def test_create_wallet(db: AsyncSession):
+async def test_create_wallet(db: DBManager):
     data = {
         "name": "rub",
         "description": "main_wallet",
@@ -17,14 +17,13 @@ async def test_create_wallet(db: AsyncSession):
     wallet = WalletCreate(**data)
     db_wallet = Wallet(**wallet.model_dump(), user_id=db_user.id)
     db.add(db_wallet)
-    await db.commit()
 
-    wallet = await db.scalar(select(Wallet))
+    wallet = await db.session.scalar(select(Wallet))
     assert wallet.id == 1
     assert wallet.user_id == db_user.id
 
 
-async def test_get_wallet_by_name(db: AsyncSession):
+async def test_get_wallet_by_name(db: DBManager):
     data_1 = {
         "name": "rub",
         "description": "main_wallet",
@@ -47,15 +46,13 @@ async def test_get_wallet_by_name(db: AsyncSession):
     db_wallet = Wallet(**wallet.model_dump(), user_id=db_user.id)
     db.add(db_wallet)
 
-    await db.commit()
-
-    wallet = await db.scalar(select(Wallet).where(Wallet.name == "usd"))
+    wallet = await db.session.scalar(select(Wallet).where(Wallet.name == "usd"))
     assert wallet.id == 2
     assert wallet.name != "rub"
     assert wallet.user_id == db_user.id
 
 
-async def test_get_wallets(db: AsyncSession):
+async def test_get_wallets(db: DBManager):
     data_1 = {
         "name": "rub",
         "description": "main_wallet",
@@ -78,7 +75,5 @@ async def test_get_wallets(db: AsyncSession):
     db_wallet = Wallet(**wallet.model_dump(), user_id=db_user.id)
     db.add(db_wallet)
 
-    await db.commit()
-
-    wallets = await db.scalars(select(Wallet))
+    wallets = await db.session.scalars(select(Wallet))
     assert len(wallets.all()) == 2

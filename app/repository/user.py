@@ -27,7 +27,7 @@ class UserRepository:
         )
 
         self.db.add(db_user)
-        await self.db.commit()
+        await self.db.flush()
 
         return self._from_db(db_user)
 

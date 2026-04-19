@@ -3,6 +3,7 @@ from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 from fastapi_cache.decorator import cache
 
+from app.services.operations import OperationService
 from app.utils.sort_operations import Sort, Direction
 from app.utils.operations_filter import Filter
 from app.schemas import (
@@ -12,7 +13,7 @@ from app.schemas import (
     TransferMoneyCreate,
     TransferMoneyPublic,
 )
-from app.api.dependencies import OpServiceDep, PaginationDep, UserDep
+from app.api.dependencies import PaginationDep, UserDep, DBDep
 
 from app.exceptions.python_exceptions import (
     WalletNotFoundException,
@@ -35,7 +36,7 @@ router = APIRouter(
 @router.get("/my_operations", response_model=list[OperationsHistory])
 @cache(expire=30)
 async def get_my_operations(
-    op_service: OpServiceDep,
+    db: DBDep,
     sort: Sort,
     dir: Direction,
     pagination: PaginationDep,
@@ -48,24 +49,15 @@ async def get_my_operations(
 
     filter = filter.value if filter else None
 
-    return await op_service.get_all_operations(
-        sort.name,
-        dir.name,
-        offset,
-        limit,
-        current_user.id,
-        filter,
+    return await OperationService(db).get_all_operations(
+        sort.name, dir.name, offset, limit, current_user.id, filter
     )
 
 
 @router.post("/add", response_model=OperationPublic)
-async def add_money(
-    operation: OperationCreate,
-    op_service: OpServiceDep,
-    curretn_user: UserDep,
-):
+async def add_money(operation: OperationCreate, db: DBDep, curretn_user: UserDep):
     try:
-        return await op_service.add_money(operation, curretn_user.id)
+        return await OperationService(db).add_money(operation, curretn_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
     except Exception as err:
@@ -73,13 +65,9 @@ async def add_money(
 
 
 @router.post("/withdraw", response_model=OperationPublic)
-async def withdraw_money(
-    operation: OperationCreate,
-    op_service: OpServiceDep,
-    current_user: UserDep,
-):
+async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
     try:
-        return await op_service.withdraw_money(operation, current_user.id)
+        return await OperationService(db).withdraw_money(operation, current_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
     except InsufficientFundsException as err:
@@ -90,12 +78,10 @@ async def withdraw_money(
 
 @router.post("/transfer", response_model=TransferMoneyPublic)
 async def transfer_money(
-    transfer: TransferMoneyCreate,
-    op_service: OpServiceDep,
-    current_user: UserDep,
+    transfer: TransferMoneyCreate, db: DBDep, current_user: UserDep
 ):
     try:
-        return await op_service.transfer_money(transfer, current_user.id)
+        return await OperationService(db).transfer_money(transfer, current_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
     except InsufficientFundsException as err:

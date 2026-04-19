@@ -1,9 +1,9 @@
 from app.schemas import OperationCreate, TransferMoneyCreate, OperationsHistory
-from app.repository.operation import OperationRepository
+from app.uow.uow import DBManager
 
 
 class OperationService:
-    def __init__(self, operation_repo: OperationRepository):
+    def __init__(self, operation_repo: DBManager):
         self.operation_repo = operation_repo
 
     async def get_all_operations(
@@ -15,7 +15,7 @@ class OperationService:
         user_id: int,
         filter: str | None = None,
     ) -> list[OperationsHistory]:
-        return await self.operation_repo.get_all_operations(
+        return await self.operation_repo.operations.get_all_operations(
             sort_param,
             dir,
             offset,
@@ -26,12 +26,12 @@ class OperationService:
 
     async def add_money(self, operation: OperationCreate, user_id: int) -> dict:
 
-        return await self.operation_repo.add_money(operation, user_id)
+        return await self.operation_repo.operations.add_money(operation, user_id)
 
     async def withdraw_money(self, operation: OperationCreate, user_id: int) -> dict:
 
-        return await self.operation_repo.withdraw_money(operation, user_id)
+        return await self.operation_repo.operations.withdraw_money(operation, user_id)
 
     async def transfer_money(self, transfer: TransferMoneyCreate, user_id: int) -> dict:
 
-        return await self.operation_repo.transfer_money(transfer, user_id)
+        return await self.operation_repo.operations.transfer_money(transfer, user_id)

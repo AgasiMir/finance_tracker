@@ -82,10 +82,6 @@ class OperationRepository:
 
         wallet.balance += operation.amount
 
-        await self.db.commit()
-        await self.db.refresh(db_operation)
-        await self.db.refresh(wallet)
-
         return {
             "message": f"Wallet {operation.wallet_name!r} balance increased by {operation.amount}",
             "description": operation.description,
@@ -111,10 +107,6 @@ class OperationRepository:
         self.db.add(db_operation)
 
         wallet.balance -= operation.amount
-
-        await self.db.commit()
-        await self.db.refresh(db_operation)
-        await self.db.refresh(wallet)
 
         return {
             "message": f"Wallet {operation.wallet_name!r} balance decreased by {operation.amount}",
@@ -144,8 +136,6 @@ class OperationRepository:
 
         wallet_from.balance -= transfer.amount
         wallet_to.balance += transfer.amount
-
-        await self.db.commit()
 
         return {
             "add": f"Wallet {transfer.wallet_to!r} + {transfer.amount} = {wallet_to.balance}",

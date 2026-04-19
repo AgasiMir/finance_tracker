@@ -1,5 +1,4 @@
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import (
     WalletCreate,
     OperationCreate,
@@ -7,17 +6,17 @@ from app.schemas import (
     TransferMoneyCreate,
 )
 from app.models import User
-from app.repository.operation import OperationRepository
-from app.repository.wallet import WalletRepository
 from app.exceptions.python_exceptions import (
     WalletNotFoundException,
     InsufficientFundsException,
     SameWalletException,
 )
 
+from app.uow.uow import DBManager
+
 
 @pytest.fixture
-async def user_wallets_operations(db: AsyncSession):
+async def user_wallets_operations(db: DBManager):
     wallet_data_1 = {
         "name": "rub",
         "description": "main_wallet",
@@ -43,8 +42,8 @@ async def user_wallets_operations(db: AsyncSession):
     wallet_1 = WalletCreate(**wallet_data_1)
     wallet_2 = WalletCreate(**wallet_data_2)
 
-    wallet_1 = await WalletRepository(db).create_wallet(wallet_1, user_id=db_user.id)
-    wallet_2 = await WalletRepository(db).create_wallet(wallet_2, user_id=db_user.id)
+    wallet_1 = await db.wallets.create_wallet(wallet_1, user_id=db_user.id)
+    wallet_2 = await db.wallets.create_wallet(wallet_2, user_id=db_user.id)
 
     operation_1 = OperationCreate(**operation_data_1)
     operation_2 = OperationCreate(**operation_data_2)
@@ -52,17 +51,17 @@ async def user_wallets_operations(db: AsyncSession):
     return db_user, wallet_1, wallet_2, operation_1, operation_2
 
 
-async def test_operation_add_money(db: AsyncSession, user_wallets_operations):
+async def test_operation_add_money(db: DBManager, user_wallets_operations):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
-    res_1 = await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    res_2 = await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    res_1 = await db.operations.add_money(operation_1, user_id=user.id)
+    res_2 = await db.operations.add_money(operation_2, user_id=user.id)
 
     assert isinstance(res_1, dict)
     assert res_2["new_balance"] == 4.0
 
 
-async def test_operation_withdraw_money(db: AsyncSession, user_wallets_operations):
+async def test_operation_withdraw_money(db: DBManager, user_wallets_operations):
     user, *_, operation_1, _ = user_wallets_operations
 
     operation_data_2 = {
@@ -72,14 +71,14 @@ async def test_operation_withdraw_money(db: AsyncSession, user_wallets_operation
 
     operation_2 = OperationCreate(**operation_data_2)
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    res = await OperationRepository(db).withdraw_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    res = await db.operations.withdraw_money(operation_2, user_id=user.id)
 
     assert isinstance(res, dict)
     assert res["new_balance"] == operation_1.amount - operation_2.amount
 
 
-async def test_operation_transfer_money(db: AsyncSession, user_wallets_operations):
+async def test_operation_transfer_money(db: DBManager, user_wallets_operations):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
     wallet_data_2 = {
@@ -99,34 +98,34 @@ async def test_operation_transfer_money(db: AsyncSession, user_wallets_operation
 
     wallet_2 = WalletCreate(**wallet_data_2)
 
-    await WalletRepository(db).create_wallet(wallet_2, user_id=user.id)
+    await db.wallets.create_wallet(wallet_2, user_id=user.id)
 
     operation_2 = OperationCreate(**operation_data_2)
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
     transfer = TransferMoneyCreate(**transfer_data)
 
-    res = await OperationRepository(db).transfer_money(transfer, user_id=user.id)
+    res = await db.operations.transfer_money(transfer, user_id=user.id)
 
     assert isinstance(res, dict)
 
 
-async def test_get_all_operations(db: AsyncSession, user_wallets_operations):
+async def test_get_all_operations(db: DBManager, user_wallets_operations):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
-    res_1 = await OperationRepository(db).get_all_operations(
+    res_1 = await db.operations.get_all_operations(
         "id",
         "desc",
         0,
         10,
         user.id,
     )
-    res_2 = await OperationRepository(db).get_all_operations(
+    res_2 = await db.operations.get_all_operations(
         "id",
         "desc",
         0,
@@ -139,9 +138,7 @@ async def test_get_all_operations(db: AsyncSession, user_wallets_operations):
     assert len(res_2) == 0
 
 
-async def test_add_money_to_not_existing_wallet(
-    db: AsyncSession, user_wallets_operations
-):
+async def test_add_money_to_not_existing_wallet(db: DBManager, user_wallets_operations):
     user, *_ = user_wallets_operations
 
     operation_data_1 = {
@@ -153,11 +150,11 @@ async def test_add_money_to_not_existing_wallet(
     operation_1 = OperationCreate(**operation_data_1)
 
     with pytest.raises(WalletNotFoundException):
-        await OperationRepository(db).add_money(operation_1, user_id=user.id)
+        await db.operations.add_money(operation_1, user_id=user.id)
 
 
 async def test_withdraw_money_from_not_existing_wallet(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_ = user_wallets_operations
 
@@ -170,11 +167,11 @@ async def test_withdraw_money_from_not_existing_wallet(
     operation_1 = OperationCreate(**operation_data_1)
 
     with pytest.raises(WalletNotFoundException):
-        await OperationRepository(db).withdraw_money(operation_1, user_id=user.id)
+        await db.operations.withdraw_money(operation_1, user_id=user.id)
 
 
 async def test_withdraw_money_with_insufficient_funds(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_ = user_wallets_operations
 
@@ -187,11 +184,11 @@ async def test_withdraw_money_with_insufficient_funds(
     operation_1 = OperationCreate(**operation_data_1)
 
     with pytest.raises(InsufficientFundsException):
-        await OperationRepository(db).withdraw_money(operation_1, user_id=user.id)
+        await db.operations.withdraw_money(operation_1, user_id=user.id)
 
 
 async def test_transfer_money_from_non_existing_wallet(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
@@ -201,17 +198,17 @@ async def test_transfer_money_from_non_existing_wallet(
         "amount": 500.0,
     }
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
     transfer = TransferMoneyCreate(**transfer_data)
 
     with pytest.raises(WalletNotFoundException):
-        await OperationRepository(db).transfer_money(transfer, user_id=user.id)
+        await db.operations.transfer_money(transfer, user_id=user.id)
 
 
 async def test_transfer_money_to_non_existing_wallet(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
@@ -221,17 +218,17 @@ async def test_transfer_money_to_non_existing_wallet(
         "amount": 50,
     }
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
     transfer = TransferMoneyCreate(**transfer_data)
 
     with pytest.raises(WalletNotFoundException):
-        await OperationRepository(db).transfer_money(transfer, user_id=user.id)
+        await db.operations.transfer_money(transfer, user_id=user.id)
 
 
 async def test_transfer_money_with_the_same_wallet(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
@@ -241,17 +238,17 @@ async def test_transfer_money_with_the_same_wallet(
         "amount": 50,
     }
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
     transfer = TransferMoneyCreate(**transfer_data)
 
     with pytest.raises(SameWalletException):
-        await OperationRepository(db).transfer_money(transfer, user_id=user.id)
+        await db.operations.transfer_money(transfer, user_id=user.id)
 
 
 async def test_transfer_money_with_insufficient_funds(
-    db: AsyncSession, user_wallets_operations
+    db: DBManager, user_wallets_operations
 ):
     user, *_, operation_1, operation_2 = user_wallets_operations
 
@@ -261,10 +258,10 @@ async def test_transfer_money_with_insufficient_funds(
         "amount": 500,
     }
 
-    await OperationRepository(db).add_money(operation_1, user_id=user.id)
-    await OperationRepository(db).add_money(operation_2, user_id=user.id)
+    await db.operations.add_money(operation_1, user_id=user.id)
+    await db.operations.add_money(operation_2, user_id=user.id)
 
     transfer = TransferMoneyCreate(**transfer_data)
 
     with pytest.raises(InsufficientFundsException):
-        await OperationRepository(db).transfer_money(transfer, user_id=user.id)
+        await db.operations.transfer_money(transfer, user_id=user.id)
