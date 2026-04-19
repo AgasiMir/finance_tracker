@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 from unittest import mock
 
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
+# mock.patch("fastapi_limiter.depends.RateLimiter", lambda *args, **kwargs: lambda f: f).start()
 
 from httpx import ASGITransport, AsyncClient
 
@@ -26,13 +27,13 @@ async def get_db_null_pull():
         yield db
 
 
+app.dependency_overrides[get_db] = get_db_null_pull
+
+
 @pytest.fixture
 async def db():
     async for db in get_db_null_pull():
         yield db
-
-
-app.dependency_overrides[get_db] = get_db_null_pull
 
 
 @pytest.fixture(autouse=True)
@@ -49,3 +50,32 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
         base_url="http://test",
     ) as client:
         yield client
+
+
+# @pytest.fixture(scope="session")
+# async def register_user(async_client):
+#     response = await async_client.post(
+#         "/users/create_user",
+#         json={"email": "test@example.com", "password": "12345678"},
+#     )
+#     assert response.status_code == 200, f"Failed to create user: {response.text}"
+
+
+# @pytest.fixture(scope="session")
+# async def authenticated_ac(register_user):
+#     # Создаем новый клиент для авторизованных запросов
+#     async with AsyncClient(
+#         transport=ASGITransport(app=app),
+#         base_url="http://test",
+#     ) as ac:
+#         # Регистрация уже выполнена через register_user
+#         response = await ac.post(
+#             "/users/token",
+#             data={"username": "test@example.com", "password": "12345678"},
+#         )
+#         assert response.status_code == 200, f"Failed to get token: {response.text}"
+#         token = response.json().get("access_token")
+#         print(token)
+#         assert token is not None, "Token is missing in response"
+#         ac.headers["Authorization"] = f"Bearer {token}"
+#         yield ac

@@ -1,9 +1,17 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.exceptions.python_exceptions import UserAlreadyExistsException
+from app.exceptions.python_exceptions import (
+    IncorrectCredentialsException,
+    UserAlreadyExistsException,
+)
 from app.models import User
 from app.schemas import UserCreate, UserPublic
-from app.auth import create_access_token, create_refresh_token, hash_password
+from app.auth import (
+    create_access_token,
+    create_refresh_token,
+    hash_password,
+    verify_password,
+)
 
 
 class UserRepository:
@@ -31,13 +39,11 @@ class UserRepository:
 
         return self._from_db(db_user)
 
-    async def login_user(self, username: str) -> dict:
-        user = await self.db.scalar(
-            select(User).where(
-                User.email == username,
-                User.is_active,
-            )
-        )
+    async def login_user(self, username: str, password: str) -> dict:
+        user = await self.get_user_by_email(username)
+
+        if not user or not verify_password(password, user.hashed_password):
+            raise IncorrectCredentialsException
 
         access_token = create_access_token(data={"sub": user.email, "id": user.id})
         refresh_token = create_refresh_token(data={"sub": user.email, "id": user.id})

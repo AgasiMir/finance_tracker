@@ -33,7 +33,7 @@ router = APIRouter(
 )
 
 
-@router.get("/my_operations", response_model=list[OperationsHistory])
+@router.get("/my-operations", response_model=list[OperationsHistory])
 @cache(expire=30)
 async def get_my_operations(
     db: DBDep,

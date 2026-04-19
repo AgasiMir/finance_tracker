@@ -37,3 +37,7 @@ class DBManager:
 
     async def flush(self):
         await self.session.flush()
+
+    # async def scalar(self, statement, parameters=None, execution_options=None):
+    #     """Execute a statement and return a scalar result."""
+    #     return await self.session.scalar(statement, parameters, execution_options)

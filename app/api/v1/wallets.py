@@ -19,11 +19,11 @@ from app.services.wallets import WalletService
 router = APIRouter(
     prefix="/api/v1/wallet",
     tags=["💰💰💰"],
-    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
+    # dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
 )
 
 
-@router.get("/my_wallets", response_model=list[WalletPublic])
+@router.get("/my-wallets", response_model=list[WalletPublic])
 @cache(expire=30)
 async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: UserDep):
     page = pagination.page

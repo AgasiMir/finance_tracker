@@ -428,6 +428,7 @@ dependencies = [
     { name = "loguru" },
     { name = "passlib" },
     { name = "pyjwt" },
+    { name = "pytest-asyncio" },
     { name = "python-multipart" },
     { name = "redis" },
     { name = "sqlalchemy" },
@@ -436,7 +437,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
-    { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-dotenv" },
     { name = "ruff" },
@@ -453,6 +453,7 @@ requires-dist = [
     { name = "loguru" },
     { name = "passlib", specifier = ">=1.7.4" },
     { name = "pyjwt", specifier = ">=2.12.1" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
     { name = "python-multipart", specifier = ">=0.0.26" },
     { name = "redis", specifier = ">=7.4.0" },
     { name = "sqlalchemy", specifier = ">=2.0.49" },
@@ -461,7 +462,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pytest", specifier = ">=9.0.3" },
-    { name = "pytest-asyncio", specifier = ">=1.3.0" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-dotenv", specifier = ">=0.5.2" },
     { name = "ruff", specifier = ">=0.15.10" },

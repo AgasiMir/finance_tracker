@@ -17,4 +17,3 @@ DBDep = Annotated[DBManager, Depends(get_db)]
 
 PaginationDep = Annotated[Pagination, Depends()]
 UserDep = Annotated[User, Depends(get_current_user)]
-
