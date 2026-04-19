@@ -10,11 +10,33 @@ from app.exceptions.python_exceptions import (
 
 
 class OperationRepository:
+    """
+    Репозиторий для операций с кошельками.
+
+    Предоставляет методы для работы с финансовыми операциями:
+    пополнение, снятие, перевод средств, а также получение истории операций.
+    """
+
     def __init__(self, db: AsyncSession):
+        """
+        Инициализирует репозиторий операций.
+
+        Args:
+            db: Асинхронная сессия SQLAlchemy для работы с базой данных.
+        """
         self.db = db
 
     @staticmethod
     def _from_db(model: Operation) -> OperationsHistory:
+        """
+        Преобразует модель Operation в схему OperationsHistory.
+
+        Args:
+            model: Экземпляр модели Operation из базы данных.
+
+        Returns:
+            OperationsHistory: Валидированная схема операции.
+        """
         return OperationsHistory.model_validate(model)
 
     async def _get_wallet(self, wallet_name: str, user_id) -> Wallet:
@@ -40,6 +62,20 @@ class OperationRepository:
         user_id: int,
         filter: str | None = None,
     ) -> list[OperationsHistory]:
+        """
+        Получает список операций с пагинацией, сортировкой и фильтрацией.
+
+        Args:
+            sort_param: Поле для сортировки (например, "amount", "created_at").
+            dir: Направление сортировки ("asc" или "desc").
+            offset: Смещение для пагинации.
+            limit: Количество записей на странице.
+            user_id: Идентификатор пользователя для фильтрации по владельцу кошелька.
+            filter: Опциональный фильтр по типу операции (например, "income", "expense").
+
+        Returns:
+            list[OperationsHistory]: Список операций, преобразованных в схему.
+        """
         filters = []
 
         if filter:
@@ -71,6 +107,23 @@ class OperationRepository:
         user_id: int,
         type: str = "income",
     ) -> dict:
+        """
+        Пополняет баланс кошелька.
+
+        Создает операцию пополнения и увеличивает баланс кошелька на указанную сумму.
+        Использует блокировку FOR UPDATE для предотвращения гонок.
+
+        Args:
+            operation: Схема с данными операции (название кошелька, сумма, описание).
+            user_id: Идентификатор пользователя-владельца кошелька.
+            type: Тип операции (по умолчанию "income").
+
+        Returns:
+            dict: Словарь с сообщением, описанием и новым балансом.
+
+        Raises:
+            WalletNotFoundException: Если кошелек с указанным именем не найден.
+        """
         wallet = await self._get_wallet(operation.wallet_name, user_id)
         if not wallet:
             raise WalletNotFoundException(operation.wallet_name)
@@ -94,6 +147,25 @@ class OperationRepository:
         user_id: int,
         type: str = "expense",
     ) -> dict:
+        """
+        Снимает деньги с кошелька.
+
+        Создает операцию расхода и уменьшает баланс кошелька на указанную сумму.
+        Использует блокировку FOR UPDATE для предотвращения гонок.
+        Проверяет достаточность средств перед списанием.
+
+        Args:
+            operation: Схема с данными операции (название кошелька, сумма, описание).
+            user_id: Идентификатор пользователя-владельца кошелька.
+            type: Тип операции (по умолчанию "expense").
+
+        Returns:
+            dict: Словарь с сообщением, описанием и новым балансом.
+
+        Raises:
+            WalletNotFoundException: Если кошелек с указанным именем не найден.
+            InsufficientFundsException: Если на балансе недостаточно средств.
+        """
         wallet = await self._get_wallet(operation.wallet_name, user_id)
         if not wallet:
             raise WalletNotFoundException(operation.wallet_name)
@@ -115,6 +187,26 @@ class OperationRepository:
         }
 
     async def transfer_money(self, transfer: TransferMoneyCreate, user_id: int) -> dict:
+        """
+        Переводит деньги между кошельками одного пользователя.
+
+        Обеспечивает атомарность перевода: списывает сумму с одного кошелька
+        и зачисляет на другой. Использует блокировку FOR UPDATE для обоих кошельков
+        для предотвращения гонок. Проверяет существование обоих кошельков,
+        достаточность средств и предотвращает перевод на тот же кошелек.
+
+        Args:
+            transfer: Схема перевода (кошелек-отправитель, кошелек-получатель, сумма).
+            user_id: Идентификатор пользователя-владельца обоих кошельков.
+
+        Returns:
+            dict: Словарь с информацией о зачислении и списании.
+
+        Raises:
+            WalletNotFoundException: Если один из кошельков не найден.
+            SameWalletException: Если попытка перевода на тот же кошелек.
+            InsufficientFundsException: Если на балансе отправителя недостаточно средств.
+        """
         wallet_from = await self._get_wallet(transfer.wallet_from, user_id)
 
         if not wallet_from:
