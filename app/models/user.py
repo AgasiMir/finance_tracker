@@ -39,6 +39,7 @@ class User(Base):
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, native_enum=True),
         server_default="user",
+        nullable=False,
     )
 
     wallets: Mapped[list["Wallet"]] = relationship(back_populates="user")
