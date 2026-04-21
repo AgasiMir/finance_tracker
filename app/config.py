@@ -18,12 +18,15 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
 
+    GF_SECURITY_ADMIN_USER: str
+    GF_SECURITY_ADMIN_PASSWORD: str
+
     @property
     def DB_URL(self):
         url = f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         return url
 
-    model_config = SettingsConfigDict(env_file=[".env.dev", ".env.prod"])
+    model_config = SettingsConfigDict(env_file=[".env.prod"])
 
 
 settings = Settings()

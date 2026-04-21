@@ -19,7 +19,7 @@ services:
     image: postgres:17
     container_name: finance_tracker_db
     env_file: 
-      ".env.prod"
+      .env.prod
     ports:
       - "6432:5432"  
     volumes:
