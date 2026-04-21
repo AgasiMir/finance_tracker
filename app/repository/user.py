@@ -96,8 +96,20 @@ class UserRepository:
         if not user or not verify_password(password, user.hashed_password):
             raise IncorrectCredentialsException
 
-        access_token = create_access_token(data={"sub": user.email, "id": user.id})
-        refresh_token = create_refresh_token(data={"sub": user.email, "id": user.id})
+        access_token = create_access_token(
+            data={
+                "sub": user.email,
+                "id": user.id,
+                "role": str(user.role),
+            }
+        )
+        refresh_token = create_refresh_token(
+            data={
+                "sub": user.email,
+                "id": user.id,
+                "role": str(user.role),
+            }
+        )
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -119,6 +131,7 @@ class UserRepository:
             data={
                 "sub": user.email,
                 "id": user.id,
+                "role": str(user.role),
             }
         )
 

@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 
 class UserRole(Enum):
-    USER = "user"
-    ADMIN = "admin"
+    user = "user"
+    admin = "admin"
 
 
 class User(Base):
@@ -23,6 +23,7 @@ class User(Base):
         email (str): Электронная почта пользователя (уникальная, до 255 символов)
         hashed_password (str): Хешированный пароль пользователя (до 255 символов)
         is_active (bool): Флаг активности пользователя, по умолчанию True
+        role (UserRole): Роль пользователя (по умолчанию UserRole.user)
         wallets (list[Wallet]): Список кошельков, принадлежащих пользователю
 
     Ограничения:
