@@ -8,6 +8,7 @@ from prometheus_client import generate_latest
 
 from app.api.v1 import routers
 from app.init import redis_manager
+from app.log import log_requests
 
 
 @asynccontextmanager
@@ -20,7 +21,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(lifespan=lifespan, title="Finance Tracker")
 
-# app.middleware("http")(log_requests)
+app.middleware("http")(log_requests)
 
 
 @app.get("/metrics")

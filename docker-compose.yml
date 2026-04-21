@@ -61,11 +61,20 @@ services:
     image: prom/prometheus:v2.54.1
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml
     ports:
       - "9090:9090"
     networks:
       - finance_tracker_network
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.prod
+    networks:
+      - finance_tracker_network
 
 volumes:
   finance_tracker_data:
