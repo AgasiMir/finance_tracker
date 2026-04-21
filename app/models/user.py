@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean
+from enum import Enum
+from sqlalchemy import String, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -7,6 +8,11 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models import Wallet
+
+
+class UserRole(Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class User(Base):
@@ -30,5 +36,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, native_enum=True),
+        server_default="user",
+    )
 
     wallets: Mapped[list["Wallet"]] = relationship(back_populates="user")
