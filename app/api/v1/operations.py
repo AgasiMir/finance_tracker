@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 from fastapi_cache.decorator import cache
@@ -28,8 +28,8 @@ from app.exceptions.fastapi_exceptions import (
 
 router = APIRouter(
     prefix="/api/v1/operations",
-    tags=["💵💶💷💴"],
-    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
+    tags=["operations 💵💶💷💴"],
+    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 2))))],
 )
 
 
@@ -54,17 +54,19 @@ async def get_my_operations(
     )
 
 
-@router.post("/add", response_model=OperationPublic)
+@router.post(
+    "/add", status_code=status.HTTP_201_CREATED, response_model=OperationPublic
+)
 async def add_money(operation: OperationCreate, db: DBDep, curretn_user: UserDep):
     try:
         return await OperationService(db).add_money(operation, curretn_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
-    except Exception as err:
-        raise err
 
 
-@router.post("/withdraw", response_model=OperationPublic)
+@router.post(
+    "/withdraw", status_code=status.HTTP_201_CREATED, response_model=OperationPublic
+)
 async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
     try:
         return await OperationService(db).withdraw_money(operation, current_user.id)
@@ -72,11 +74,11 @@ async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: Us
         raise WalletNotFoundHTTPException(err.detail)
     except InsufficientFundsException as err:
         raise InsufficientFundsHTTPException(err.detail)
-    except Exception as err:
-        raise err
 
 
-@router.post("/transfer", response_model=TransferMoneyPublic)
+@router.post(
+    "/transfer", status_code=status.HTTP_201_CREATED, response_model=TransferMoneyPublic
+)
 async def transfer_money(
     transfer: TransferMoneyCreate, db: DBDep, current_user: UserDep
 ):
@@ -88,5 +90,3 @@ async def transfer_money(
         raise InsufficientFundsHTTPException(err.detail)
     except SameWalletException:
         raise SameWalletHTTPException
-    except Exception as err:
-        raise err

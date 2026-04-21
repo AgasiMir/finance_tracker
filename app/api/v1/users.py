@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 
@@ -26,14 +26,14 @@ router = APIRouter(
 )
 
 
-@router.post("/create_user", response_model=UserPublic)
+@router.post(
+    "/create-user", status_code=status.HTTP_201_CREATED, response_model=UserPublic
+)
 async def create_user(user: UserCreate, db: DBDep):
     try:
         return await UserService(db).create_user(user)
     except UserAlreadyExistsException:
         raise UserAlreadyHTTPExistsException
-    except Exception as err:
-        raise err
 
 
 @router.post("/token")
@@ -42,19 +42,14 @@ async def login(db: DBDep, form_data: OAuth2PasswordRequestForm = Depends()):
         return await UserService(db).login(form_data.username, form_data.password)
     except IncorrectCredentialsException:
         raise IncorrectCredentialsHTTPException
-    except Exception as err:
-        raise err
 
 
 @router.post("/refresh-token")
-async def refresh_token(refresh_token: str, db: DBDep):
+async def refresh_token(db: DBDep, refresh_token: str = Body(..., embed=True)):
     """
     Обновляет access_token с помощью refresh_token.
     """
-
     try:
         return await UserService(db).refresh_token(refresh_token)
     except CredentialsException:
         raise CredentialsHTTPException
-    except Exception as err:
-        raise err

@@ -4,14 +4,23 @@ import pytest
 from typing import AsyncGenerator
 from unittest import mock
 
+import pytest_asyncio
+
+# Мок для fastapi_cache - отключает кэширование в тестах
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
-# mock.patch("fastapi_limiter.depends.RateLimiter", lambda *args, **kwargs: lambda f: f).start()
+
+# Мок для fastapi_limiter - отключает ограничение скорости в тестах
+# RateLimiter заменяется на функцию, которая возвращает lambda: None,
+# что удовлетворяет интерфейсу Depends и пропускает лимитер
+mock.patch(
+    "fastapi_limiter.depends.RateLimiter", lambda *args, **kwargs: lambda: None
+).start()
 
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 from app.config import settings
-from app.core.db_depends import get_db
+from app.api.dependencies import get_db
 from app.core.database import Base, engine_null_pull, async_session_null_pool
 from app.models import *
 from app.uow.uow import DBManager
@@ -19,6 +28,34 @@ from app.uow.uow import DBManager
 
 @pytest.fixture(autouse=True, scope="session")
 def check_test_mode():
+    """
+    Фикстура безопасности, автоматически запускаемая перед началом тестовой сессии.
+
+    Назначение:
+        Гарантирует, что тесты запускаются исключительно в среде 'TEST'.
+        Предотвращает случайное выполнение интеграционных или функциональных тестов
+        в рабочих (prod) или промежуточных (staging) окружениях, где это может привести
+        к потере или повреждению реальных данных.
+
+    Поведение:
+        - Автоматически вызывается один раз при старте тестовой сессии (autouse=True).
+        - Имеет область видимости 'session' — выполняется до загрузки других фикстур.
+        - Проверяет значение `settings.ENVIRONMENT`.
+        - Если среда не равна 'TEST', тесты немедленно останавливаются с ошибкой утверждения.
+
+    Пример ожидаемой настройки:
+        # settings.py
+        ENVIRONMENT = "TEST"
+
+    Почему это важно:
+        - Защищает production-базы данных и внешние API от побочных эффектов тестов.
+        - Обеспечивает детерминированность тестовой среды.
+        - Является частью стратегии безопасного тестирования.
+
+    Примечание:
+        Убедитесь, что переменная окружения (например, ENVIRONMENT) установлена в 'TEST'
+        перед запуском тестов, иначе выполнение будет прервано.
+    """
     assert settings.ENVIRONMENT == "TEST"
 
 
@@ -38,13 +75,88 @@ async def db():
 
 @pytest.fixture(autouse=True)
 async def setup_database(check_test_mode):
+    """
+    Фикстура для автоматической инициализации тестовой базы данных перед каждым тестом.
+
+    Назначение:
+        - Полностью сбрасывает схему базы данных: удаляет все таблицы и создаёт их заново.
+        - Обеспечивает чистое и предсказуемое состояние БД перед выполнением каждого теста.
+        - Предотвращает влияние одного теста на другой за счёт изоляции данных.
+
+    Зависимости:
+        check_test_mode: Убеждается, что тесты запускаются только в безопасном окружении 'TEST'.
+                         Эта фикстура выполняется первой благодаря автозапуску и области видимости.
+
+    Поведение:
+        - Автоматически вызывается перед каждым тестом (autouse=True, scope="function" по умолчанию).
+        - Использует `engine_null_pull` — специальный движок без пула соединений, подходящий для DDL-операций.
+        - Выполняет:
+            1. DROP TABLE IF EXISTS — удаляет все существующие таблицы.
+            2. CREATE TABLE IF NOT EXISTS — создаёт таблицы согласно метаданным `Base`.
+
+    Используется в:
+        Интеграционных и функциональных тестах, где требуется работа с реальной (обычно SQLite или тестовой PostgreSQL) БД.
+
+    Почему это важно:
+        - Гарантирует, что каждый тест начинается с пустой базы, независимо от результата предыдущего.
+        - Устраняет "фоновые" данные, которые могут повлиять на результат теста.
+        - Поддерживает воспроизводимость и надёжность тестовой среды.
+
+    Примечания:
+        - Убедитесь, что `Base` импортирована из актуального модуля ORM и содержит все модели.
+        - `engine_null_pull` должен быть сконфигурирован отдельно (например, через `create_async_engine(url, poolclass=NullPool)`).
+        - Не используйте эту фикстуру с production-движком — только с тестовой БД.
+
+    Внимание:
+        Так как фикстура имеет autouse=True, она применяется ко всем тестам в сессии.
+        Если нужно исключить очистку БД в каком-то тесте — пересмотрите архитектуру или используйте отдельную метку.
+    """
     async with engine_null_pull.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
+    """
+    Фикстура для создания асинхронного HTTP-клиента, интегрированного с FastAPI-приложением.
+
+    Назначение:
+        Предоставляет экземпляр `httpx.AsyncClient`, настроенный для тестирования API
+        без необходимости запуска реального сервера. Использует ASGI-транспорт для прямого
+        взаимодействия с приложением (app) на уровне Python.
+
+    Особенности:
+        - Работает на уровне ASGI: все запросы обрабатываются напрямую через FastAPI-приложение.
+        - Не требует открытия портов или сетевого соединения — идеально подходит для CI/CD.
+        - Имеет область видимости 'session' — создаётся один раз за сессию тестирования.
+        - Автоматически управляет жизненным циклом клиента (через `async with`).
+
+    Параметры клиента:
+        transport = ASGITransport(app=app)
+            — Перехватывает HTTP-запросы и направляет их напрямую в приложение FastAPI.
+        base_url = "http://test"
+            — Базовый URL для всех запросов; используется только для разрешения относительных путей.
+            Может быть любым (не влияет на производительность), так как запросы не уходят в сеть.
+
+    Пример использования:
+        async def test_read_root(async_client):
+            response = await async_client.get("/users")
+            assert response.status_code == 200
+
+    Возвращаемое значение:
+        AsyncGenerator[AsyncClient, None]:
+            Клиент, доступный через `yield`, автоматически закрывается после завершения сессии.
+
+    Замечания:
+        - Убедитесь, что переменная `app` (экземпляр FastAPI) импортирована корректно.
+        - Подходит для интеграционных тестов маршрутов, зависимостей, авторизации и валидации.
+        - Не эмулирует задержки сети — поведение быстрее и детерминированнее, чем реальный клиент.
+
+    Альтернативы:
+        Для тестов, где важно поведение реальной сети, используйте клиент с реальным transport,
+        но в большинстве случаев эта фикстура предпочтительна благодаря скорости и изоляции.
+    """
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test",
@@ -52,30 +164,52 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
         yield client
 
 
-# @pytest.fixture(scope="session")
-# async def register_user(async_client):
-#     response = await async_client.post(
-#         "/users/create_user",
-#         json={"email": "test@example.com", "password": "12345678"},
-#     )
-#     assert response.status_code == 200, f"Failed to create user: {response.text}"
+@pytest.fixture(scope="function")
+async def register_user(async_client):
+    response = await async_client.post(
+        "/users/create-user",
+        json={"email": "test@example.com", "password": "1234abcd"},
+    )
+    assert response.status_code == 201, f"Failed to create user: {response.text}"
 
 
-# @pytest.fixture(scope="session")
-# async def authenticated_ac(register_user):
-#     # Создаем новый клиент для авторизованных запросов
-#     async with AsyncClient(
-#         transport=ASGITransport(app=app),
-#         base_url="http://test",
-#     ) as ac:
-#         # Регистрация уже выполнена через register_user
-#         response = await ac.post(
-#             "/users/token",
-#             data={"username": "test@example.com", "password": "12345678"},
-#         )
-#         assert response.status_code == 200, f"Failed to get token: {response.text}"
-#         token = response.json().get("access_token")
-#         print(token)
-#         assert token is not None, "Token is missing in response"
-#         ac.headers["Authorization"] = f"Bearer {token}"
-#         yield ac
+@pytest.fixture(scope="function")
+async def authenticated_ac(register_user, async_client):
+    """
+    Фикстура для получения асинхронного HTTP-клиента с действующей авторизацией.
+
+    Эта фикстура:
+    - Использует заранее зарегистрированного пользователя (через фикстуру `register_user`).
+    - Выполняет вход (аутентификацию) через POST-запрос к эндпоинту `/users/token`.
+    - Получает JWT-токен доступа.
+    - Устанавливает заголовок `Authorization: Bearer <token>` для клиента.
+    - Возвращает настроенный экземпляр `AsyncClient`, готовый к вызову защищённых эндпоинтов.
+
+    Зависимости:
+        register_user: Фикстура, регистрирующая тестового пользователя с логином 'test@example.com'
+                       и паролем '1234abcd'.
+        async_client: Асинхронный клиент (httpx.AsyncClient), привязанный к приложению FastAPI.
+
+    Пример использования:
+        async def test_get_profile(authenticated_ac):
+            response = await authenticated_ac.get("/users/me")
+            assert response.status_code == 200
+
+    Важно:
+        - Фикстура имеет область видимости 'function', т.е. создаётся заново для каждого теста.
+        - Если регистрация или получение токена не удастся — тест будет провален с описанием ошибки.
+
+    Возвращает:
+        AsyncClient: Клиент с установленным заголовком авторизации.
+    """
+    response = await async_client.post(
+        "/users/token",
+        data={"username": "test@example.com", "password": "1234abcd"},
+    )
+
+    assert response.status_code == 200, f"Failed to get token: {response.text}"
+    token = response.json().get("access_token")
+
+    assert token is not None, "Token is missing in response"
+    async_client.headers["Authorization"] = f"Bearer {token}"
+    yield async_client

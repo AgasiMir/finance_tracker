@@ -16,10 +16,11 @@ from app.exceptions.fastapi_exceptions import (
 )
 from app.services.wallets import WalletService
 
+
 router = APIRouter(
     prefix="/api/v1/wallet",
-    tags=["💰💰💰"],
-    # dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
+    tags=["wallets 💰💰💰"],
+    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 2))))],
 )
 
 
@@ -39,12 +40,10 @@ async def get_wallet_by_name(db: DBDep, wallet_name: str, current_user: UserDep)
         return await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
-    except Exception as err:
-        return {"error": str(err)}
 
 
 @router.post(
-    "/create_wallet",
+    "/create-wallet",
     status_code=status.HTTP_201_CREATED,
     response_model=WalletPublic,
 )
@@ -53,5 +52,3 @@ async def create_wallet(db: DBDep, wallet: WalletCreate, current_user: UserDep):
         return await WalletService(db).create_wallet(wallet, current_user.id)
     except WalletAlreadyExistsException:
         raise WalletAlreadyHTTPExistsException(wallet.name)
-    except Exception as err:
-        return {"error": str(err)}

@@ -12,6 +12,7 @@ async_engine = create_async_engine(
     echo=False,
 )
 
+
 engine_null_pull = create_async_engine(url=settings.DB_URL, poolclass=NullPool)
 
 async_session = async_sessionmaker(
