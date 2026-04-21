@@ -15,7 +15,7 @@ from app.exceptions.fastapi_exceptions import (
     WalletAlreadyHTTPExistsException,
 )
 from app.services.wallets import WalletService
-
+from app.utils.prom_metrics import REQUESTS_TOTAL
 
 router = APIRouter(
     prefix="/api/v1/wallet",
@@ -30,6 +30,8 @@ async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: Use
     page = pagination.page
     offset = (page - 1) * pagination.page_size
     limit = pagination.page_size
+
+    REQUESTS_TOTAL.labels(method="GET", endpoint="/api/v1/wallet/my-wallets/").inc()
 
     return await WalletService(db).get_wallets(offset, limit, current_user.id)
 

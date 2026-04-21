@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from app.api.dependencies import DBDep, UserDep
 
-
 router = APIRouter(prefix="/health", tags=["monitoring 📊📈"])
 
 

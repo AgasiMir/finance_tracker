@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         url = f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         return url
 
-    model_config = SettingsConfigDict(env_file=[".env.dev"])
+    model_config = SettingsConfigDict(env_file=[".env.dev", ".env.prod"])
 
 
 settings = Settings()

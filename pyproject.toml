@@ -14,6 +14,7 @@ dependencies = [
     "fastapi[standard]>=0.135.3",
     "loguru",
     "passlib>=1.7.4",
+    "prometheus-client>=0.25.0",
     "pyjwt>=2.12.1",
     "python-multipart>=0.0.26",
     "redis>=7.4.0",
