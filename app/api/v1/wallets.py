@@ -31,7 +31,9 @@ async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: Use
     offset = (page - 1) * pagination.page_size
     limit = pagination.page_size
 
-    REQUESTS_TOTAL.labels(method="GET", endpoint="/api/v1/wallet/my-wallets/").inc()
+    REQUESTS_TOTAL.labels(
+        method="GET", endpoint="/api/v1/wallet/my-wallets/", status_code="200"
+    ).inc()
 
     return await WalletService(db).get_wallets(offset, limit, current_user.id)
 
@@ -39,8 +41,20 @@ async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: Use
 @router.get("/{wallet_name}", response_model=WalletPublic)
 async def get_wallet_by_name(db: DBDep, wallet_name: str, current_user: UserDep):
     try:
-        return await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
+        res = await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
+        if res:
+            REQUESTS_TOTAL.labels(
+                method="POST",
+                endpoint=f"/api/v1/wallet/{wallet_name}",
+                status_code="200",
+            ).inc()
+        return res
     except WalletNotFoundException as err:
+        REQUESTS_TOTAL.labels(
+            method="POST",
+            endpoint=f"/api/v1/wallet/{wallet_name}",
+            status_code="404",
+        ).inc()
         raise WalletNotFoundHTTPException(err.detail)
 
 
