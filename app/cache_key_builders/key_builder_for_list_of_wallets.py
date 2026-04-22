@@ -15,8 +15,6 @@ def key_builder_for_list_of_wallets(
     "all-wallets:<user_id>:<cache_key>"
     """
 
-    print("WALLETS KEY BUILDER")
-
     cache_kw = {}
     data = kwargs.get("kwargs")
     user = data.get("current_user")
@@ -31,4 +29,5 @@ def key_builder_for_list_of_wallets(
     cache_key = hashlib.md5(  # noqa: S324
         f"{func.__module__}:{func.__name__}:{cache_kw}".encode()
     ).hexdigest()
+
     return f"all-wallets:{user.id}:{cache_key}"
