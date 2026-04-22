@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import APIRouter, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
@@ -50,20 +49,8 @@ async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: Use
 @cache(expire=300, namespace="wallets", key_builder=wallet_key_builder)
 async def get_wallet_by_name(db: DBDep, wallet_name: str, current_user: UserDep):
     try:
-        res = await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
-        # if res:
-        #     REQUESTS_TOTAL.labels(
-        #         method="GET",
-        #         endpoint=f"/api/v1/wallet/{wallet_name}",
-        #         status_code="200",
-        #     ).inc()
-        return res
+        return await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
     except WalletNotFoundException as err:
-        # REQUESTS_TOTAL.labels(
-        #     method="GET",
-        #     endpoint=f"/api/v1/wallet/{wallet_name}",
-        #     status_code="404",
-        # ).inc()
         raise WalletNotFoundHTTPException(err.detail)
 
 

@@ -31,11 +31,6 @@ async def log_requests(request: Request, call_next):
         response = await call_next(request)
         process_time = (time.time() - start_time) * 1000
 
-        # # Добавляем заголовки для предотвращения кэширования браузером
-        # response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        # response.headers["Pragma"] = "no-cache"
-        # response.headers["Expires"] = "0"
-
         log_data = {
             "event": "request",
             "request_id": request_id,
