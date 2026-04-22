@@ -22,6 +22,7 @@ class DBManager:
         Args:
             session_factory: Фабрика для создания сессий SQLAlchemy.
         """
+
         self.session_factory = session_factory
 
     async def __aenter__(self):
@@ -33,6 +34,7 @@ class DBManager:
         Returns:
             DBManager: Экземпляр менеджера базы данных.
         """
+
         self.session = self.session_factory()
 
         self.wallets = WalletRepository(self.session)
@@ -51,6 +53,7 @@ class DBManager:
             exc_type: Тип исключения, если возникло, иначе None.
             *args: Дополнительные аргументы исключения.
         """
+
         try:
             if exc_type:
                 await self.rollback()
@@ -64,6 +67,7 @@ class DBManager:
 
         Сохраняет все накопленные изменения в базе данных.
         """
+
         await self.session.commit()
 
     async def rollback(self):
@@ -71,6 +75,7 @@ class DBManager:
 
         Отменяет все накопленные изменения с момента начала транзакции.
         """
+
         await self.session.rollback()
 
     def add(self, obj):
@@ -81,6 +86,7 @@ class DBManager:
         Args:
             obj: Объект модели SQLAlchemy для добавления в сессию.
         """
+
         self.session.add(obj)
 
     async def flush(self):
@@ -88,4 +94,5 @@ class DBManager:
 
         Позволяет получить ID для новых объектов до фиксации транзакции.
         """
+
         await self.session.flush()

@@ -41,6 +41,7 @@ async def wallets(authenticated_ac):
 
     Предназначена для интеграционных тестов маршрутов, связанных с операциями над кошельками.
     """
+
     await authenticated_ac.post(
         "/api/v1/wallet/create-wallet",
         json={"name": "rub"},

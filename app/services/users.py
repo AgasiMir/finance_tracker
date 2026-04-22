@@ -20,6 +20,7 @@ class UserService:
         Args:
             user_repo (DBManager): Репозиторий для работы с пользователями.
         """
+
         self.user_repo = user_repo
 
     async def create_user(self, user: UserCreate) -> UserPublic:
@@ -31,6 +32,7 @@ class UserService:
         Returns:
             UserPublic: Созданный пользователь.
         """
+
         return await self.user_repo.users.create_user(user)
 
     async def login(self, username: str, password: str) -> dict:
@@ -43,6 +45,7 @@ class UserService:
         Returns:
             dict: Токены доступа.
         """
+
         return await self.user_repo.users.login_user(username, password)
 
     async def refresh_token(self, refresh_token: str):
@@ -54,6 +57,7 @@ class UserService:
         Returns:
             dict: Новый access token.
         """
+
         try:
             payload = jwt.decode(
                 refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]

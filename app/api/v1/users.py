@@ -27,7 +27,10 @@ router = APIRouter(
 
 
 @router.post(
-    "/create-user", status_code=status.HTTP_201_CREATED, response_model=UserPublic
+    "/create-user",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create user",
+    response_model=UserPublic,
 )
 async def create_user(user: UserCreate, db: DBDep):
     try:
@@ -36,7 +39,7 @@ async def create_user(user: UserCreate, db: DBDep):
         raise UserAlreadyHTTPExistsException
 
 
-@router.post("/token")
+@router.post("/token", summary="Login")
 async def login(db: DBDep, form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         return await UserService(db).login(form_data.username, form_data.password)
@@ -44,7 +47,7 @@ async def login(db: DBDep, form_data: OAuth2PasswordRequestForm = Depends()):
         raise IncorrectCredentialsHTTPException
 
 
-@router.post("/refresh-token")
+@router.post("/refresh-token", summary="Refresh token")
 async def refresh_token(db: DBDep, refresh_token: str = Body(..., embed=True)):
     """
     Обновляет access_token с помощью refresh_token.

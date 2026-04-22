@@ -1,5 +1,5 @@
 import redis.asyncio as redis
-from app.log import logger
+from app.middlewares.log import logger
 
 
 class RedisManager:

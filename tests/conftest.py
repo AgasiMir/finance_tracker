@@ -9,6 +9,14 @@ import pytest_asyncio
 # Мок для fastapi_cache - отключает кэширование в тестах
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 
+
+# Мок для FastAPICache.clear - отключает инвалидацию кэша в тестах
+async def mock_clear(namespace: str = None, key: str = None) -> int:
+    return 0
+
+
+mock.patch("fastapi_cache.FastAPICache.clear", mock_clear).start()
+
 # Мок для fastapi_limiter - отключает ограничение скорости в тестах
 # RateLimiter заменяется на функцию, которая возвращает lambda: None,
 # что удовлетворяет интерфейсу Depends и пропускает лимитер
@@ -56,6 +64,7 @@ def check_test_mode():
         Убедитесь, что переменная окружения (например, ENVIRONMENT) установлена в 'TEST'
         перед запуском тестов, иначе выполнение будет прервано.
     """
+
     assert settings.ENVIRONMENT == "TEST"
 
 
@@ -111,6 +120,7 @@ async def setup_database(check_test_mode):
         Так как фикстура имеет autouse=True, она применяется ко всем тестам в сессии.
         Если нужно исключить очистку БД в каком-то тесте — пересмотрите архитектуру или используйте отдельную метку.
     """
+
     async with engine_null_pull.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
@@ -157,6 +167,7 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
         Для тестов, где важно поведение реальной сети, используйте клиент с реальным transport,
         но в большинстве случаев эта фикстура предпочтительна благодаря скорости и изоляции.
     """
+
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test",
@@ -202,6 +213,7 @@ async def authenticated_ac(register_user, async_client):
     Возвращает:
         AsyncClient: Клиент с установленным заголовком авторизации.
     """
+
     response = await async_client.post(
         "/users/token",
         data={"username": "test@example.com", "password": "1234abcd"},

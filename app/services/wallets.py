@@ -1,3 +1,4 @@
+from fastapi_cache import FastAPICache
 from app.schemas import WalletCreate, WalletPublic
 from app.uow.uow import DBManager
 
@@ -20,6 +21,7 @@ class WalletService:
         Args:
             wallet_repo (DBManager): Экземпляр менеджера базы данных для доступа к данным.
         """
+
         self.wallet_repo = wallet_repo
 
     async def get_wallets(self, offset, limit, user_id: int) -> list[WalletPublic]:
@@ -33,6 +35,7 @@ class WalletService:
         Returns:
             list[WalletPublic]: Список публичных представлений кошельков пользователя.
         """
+
         return await self.wallet_repo.wallets.get_all_wallets(offset, limit, user_id)
 
     async def get_wallet_by_name(self, wallet_name: str, user_id: int) -> WalletPublic:
@@ -45,16 +48,26 @@ class WalletService:
         Returns:
             WalletPublic: Публичное представление найденного кошелька.
         """
+
         return await self.wallet_repo.wallets.get_wallet_by_name(wallet_name, user_id)
 
     async def create_wallet(self, wallet: WalletCreate, user_id: int) -> WalletPublic:
-        """Создает новый кошелек для пользователя.
+        """Создает новый кошелек для указанного пользователя.
+
+        При успешном создании инвалидирует кэш всех кошельков пользователя,
+        чтобы обеспечить актуальность данных при последующих запросах.
 
         Args:
-            wallet (WalletCreate): Данные для создания нового кошелька.
-            user_id (int): Идентификатор пользователя, которому создается кошелек.
+            wallet (WalletCreate): Данные для создания кошелька.
+            user_id (int): Идентификатор пользователя, которому будет принадлежать кошелек.
 
         Returns:
             WalletPublic: Публичное представление созданного кошелька.
         """
-        return await self.wallet_repo.wallets.create_wallet(wallet, user_id)
+
+        res = await self.wallet_repo.wallets.create_wallet(wallet, user_id)
+        if res:
+            # Инвалидация кэша всех wallet конкретного user
+            await FastAPICache.clear(namespace=f"all-wallets:{user_id}")
+
+            return res

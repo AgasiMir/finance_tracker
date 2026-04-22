@@ -51,6 +51,7 @@ async def get_user(db: DBManager):
         Убедитесь, что таблица `users` существует и миграции применены.
         Также проверьте, что `DBManager` поддерживает методы `add`, `commit`.
     """
+
     db_user = User(email="user@example.com", hashed_password=hash_password("1234abcd"))
     db.add(db_user)
     await db.commit()

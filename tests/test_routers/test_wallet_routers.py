@@ -45,6 +45,7 @@ async def get_token(db):
     Возвращает:
         str: Строка JWT-токена для тестового пользователя.
     """
+
     user = UserCreate(email="user@example.com", password="1234abcdef")
     db_user = await db.users.create_user(user)
     await db.commit()

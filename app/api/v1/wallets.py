@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
@@ -16,6 +17,9 @@ from app.exceptions.fastapi_exceptions import (
 )
 from app.services.wallets import WalletService
 from app.utils.prom_metrics import REQUESTS_TOTAL
+from app.cache_key_builders import wallet_key_builder
+from app.cache_key_builders import key_builder_for_list_of_wallets
+
 
 router = APIRouter(
     prefix="/api/v1/wallet",
@@ -24,8 +28,10 @@ router = APIRouter(
 )
 
 
-@router.get("/my-wallets", response_model=list[WalletPublic])
-@cache(expire=30)
+@router.get(
+    "/my-wallets", summary="Get user's wallets", response_model=list[WalletPublic]
+)
+@cache(expire=300, key_builder=key_builder_for_list_of_wallets)
 async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: UserDep):
     page = pagination.page
     offset = (page - 1) * pagination.page_size
@@ -38,32 +44,37 @@ async def get_my_wallets(db: DBDep, pagination: PaginationDep, current_user: Use
     return await WalletService(db).get_wallets(offset, limit, current_user.id)
 
 
-@router.get("/{wallet_name}", response_model=WalletPublic)
+@router.get(
+    "/{wallet_name}", summary="Get user's wallet by name", response_model=WalletPublic
+)
+@cache(expire=300, namespace="wallets", key_builder=wallet_key_builder)
 async def get_wallet_by_name(db: DBDep, wallet_name: str, current_user: UserDep):
     try:
         res = await WalletService(db).get_wallet_by_name(wallet_name, current_user.id)
-        if res:
-            REQUESTS_TOTAL.labels(
-                method="POST",
-                endpoint=f"/api/v1/wallet/{wallet_name}",
-                status_code="200",
-            ).inc()
+        # if res:
+        #     REQUESTS_TOTAL.labels(
+        #         method="GET",
+        #         endpoint=f"/api/v1/wallet/{wallet_name}",
+        #         status_code="200",
+        #     ).inc()
         return res
     except WalletNotFoundException as err:
-        REQUESTS_TOTAL.labels(
-            method="POST",
-            endpoint=f"/api/v1/wallet/{wallet_name}",
-            status_code="404",
-        ).inc()
+        # REQUESTS_TOTAL.labels(
+        #     method="GET",
+        #     endpoint=f"/api/v1/wallet/{wallet_name}",
+        #     status_code="404",
+        # ).inc()
         raise WalletNotFoundHTTPException(err.detail)
 
 
 @router.post(
     "/create-wallet",
     status_code=status.HTTP_201_CREATED,
+    summary="Create new wallet",
     response_model=WalletPublic,
 )
 async def create_wallet(db: DBDep, wallet: WalletCreate, current_user: UserDep):
+
     try:
         return await WalletService(db).create_wallet(wallet, current_user.id)
     except WalletAlreadyExistsException:
