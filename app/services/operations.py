@@ -2,8 +2,38 @@ from fastapi_cache import FastAPICache
 from app.schemas import OperationCreate, TransferMoneyCreate, OperationsHistory
 from app.uow.uow import DBManager
 
+from abc import ABC, abstractmethod
 
-class OperationService:
+
+class AbstractOperationService(ABC):
+    """Абстрактный класс для сервиса операций."""
+
+    @abstractmethod
+    async def get_all_operations(
+        self,
+        sort_param: str,
+        dir: str,
+        offset: int,
+        limit: int,
+        user_id: int,
+        filter: str | None = None,
+    ) -> list[OperationsHistory]:
+        pass
+
+    @abstractmethod
+    async def add_money(self, operation: OperationCreate, user_id: int) -> dict:
+        pass
+
+    @abstractmethod
+    async def withdraw_money(self, operation: OperationCreate, user_id: int) -> dict:
+        pass
+
+    @abstractmethod
+    async def transfer_money(self, operation: TransferMoneyCreate, user_id: int) -> dict:
+        pass
+
+
+class OperationService(AbstractOperationService):
     """Сервис для управления операциями с деньгами.
 
     Предоставляет методы для получения истории операций, пополнения,
