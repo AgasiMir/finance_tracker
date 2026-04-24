@@ -44,3 +44,6 @@ class User(Base):
     )
 
     wallets: Mapped[list["Wallet"]] = relationship(back_populates="user")
+
+    def __repr__(self) -> str:
+        return self.email

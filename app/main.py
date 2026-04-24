@@ -12,6 +12,11 @@ from app.middlewares.log import log_requests
 from app.middlewares.cache_middleware import dispatch
 from app.middlewares.metrics_middleware import metrics_middleware
 
+from app.core.database import async_engine
+from sqladmin import Admin
+from app.admin.views import UserAdmin, OperationAdmin, WalletAdmin
+from app.admin.auth import authentication_backend
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -23,17 +28,10 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(lifespan=lifespan, title="Finance Tracker")
 
+
 app.middleware("http")(log_requests)
 app.middleware("http")(dispatch)
 app.middleware("http")(metrics_middleware)
-
-
-# @app.get("/metrics")
-# async def metrics():
-#     return Response(
-#         content=generate_latest(),
-#         media_type="text/plain; version=0.0.4; charset=utf-8",
-#     )
 
 
 @app.get("/metrics", tags=["monitoring"])
@@ -48,3 +46,15 @@ async def get_metrics():
 
 for router in routers:
     app.include_router(router)
+
+
+admin = Admin(
+    app,
+    async_engine,
+    title="Панель Администратора",
+    authentication_backend=authentication_backend,
+)
+
+admin.add_view(UserAdmin)
+admin.add_view(OperationAdmin)
+admin.add_view(WalletAdmin)

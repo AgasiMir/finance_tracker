@@ -50,3 +50,6 @@ class Wallet(Base):
         CheckConstraint("balance >= 0.0", name="positive_balance_check"),
         UniqueConstraint("user_id", "name", name="unique_wallet_for_user"),
     )
+
+    def __repr__(self) -> str:
+        return f"Wallet(name={self.name}, balance={self.balance})"

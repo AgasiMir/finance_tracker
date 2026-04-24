@@ -68,3 +68,6 @@ class Operation(Base):
     wallet: Mapped["Wallet"] = relationship(back_populates="operations")
 
     __table_args__ = (CheckConstraint("amount > 0.0", name="positive_amount_check"),)
+
+    def __repr__(self) -> str:
+        return f"Operation(wallet_name={self.wallet_name}, amount={self.amount}, type={self.type}, created_at={self.created_at})"
