@@ -66,6 +66,7 @@ class OperationAdmin(ModelView, model=Operation):
     name = "Операция"
     name_plural = "Операции"
     icon = "fa-solid fa-exchange"
+
     # List page
     def date_format(value):
         return value.strftime("%d.%m.%Y")

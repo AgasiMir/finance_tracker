@@ -48,5 +48,11 @@ class IncorrectCredentialsHTTPException(FinanceTrackerHTTPException):
 
 class CredentialsHTTPException(FinanceTrackerHTTPException):
     status_code = status.HTTP_401_UNAUTHORIZED
-    detail = "Could not validate refresh token"
+    detail = "Could not validate token"
+    headers = {"WWW-Authenticate": "Bearer"}
+
+
+class JWTExpiredSignatureException(FinanceTrackerHTTPException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    detail = "Token has expired"
     headers = {"WWW-Authenticate": "Bearer"}

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     GF_SECURITY_ADMIN_USER: str
     GF_SECURITY_ADMIN_PASSWORD: str
 
+    authentication_backend_secret_key: str
+
     @property
     def DB_URL(self):
         url = f"{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

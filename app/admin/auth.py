@@ -7,6 +7,8 @@ from app.models.user import UserRole
 from app.repository.user import UserRepository
 
 from app.core.database import async_session
+from app.config import settings
+from app.auth import decode_token
 
 
 class AdminAuth(AuthenticationBackend):
@@ -30,6 +32,10 @@ class AdminAuth(AuthenticationBackend):
                 "role": str(user.role),
             }
         )
+
+        if not decode_token(access_token):
+            return False
+
         request.session.update({"access_token": access_token})
 
         return True
@@ -44,7 +50,12 @@ class AdminAuth(AuthenticationBackend):
         if not token:
             return False
 
+        if not decode_token(token):
+            return False
+
         return True
 
 
-authentication_backend = AdminAuth(secret_key="...")
+authentication_backend = AdminAuth(
+    secret_key=settings.authentication_backend_secret_key
+)
