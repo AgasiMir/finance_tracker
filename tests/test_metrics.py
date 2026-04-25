@@ -1,5 +1,5 @@
 async def test_metrics_endpoint(async_client):
-    response = await async_client.get("/metrics")
+    response = await async_client.get("health/metrics")
     assert response.status_code == 200
     assert "text/plain" in response.headers["content-type"]
 
@@ -12,5 +12,5 @@ async def test_request_increments_counters(async_client):
     )
 
     # Проверим, что /metrics доступен и не падает
-    response = await async_client.get("/metrics")
+    response = await async_client.get("health/metrics")
     assert response.status_code == 200
