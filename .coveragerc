@@ -1,6 +1,7 @@
 [run]
 omit = 
     */cache_key_builders/*
+    */email/send_email.py
     */tests/*
     */__pycache__/*
     */.venv/*

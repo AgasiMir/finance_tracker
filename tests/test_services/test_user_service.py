@@ -70,7 +70,7 @@ async def test_user_service_login_user(db: DBManager, get_user):
     user = get_user
 
     user_service = UserService(db)
-    res = await user_service.login(user.email, "1234abcd")
+    res = await user_service.login(user.email, "1234abcd", "127.0.0.1")
     assert isinstance(res, dict)
 
 
@@ -81,7 +81,7 @@ async def test_user_service_login_user_with_incrorrect_credentials(
     user_service = UserService(db)
 
     with pytest.raises(IncorrectCredentialsException):
-        await user_service.login(user.email, "1234abcd_")
+        await user_service.login(user.email, "1234abcd_", "127.0.0.1")
 
 
 async def test_create_user_with_the_same_email(db: DBManager, get_user):
@@ -95,7 +95,7 @@ async def test_create_user_with_the_same_email(db: DBManager, get_user):
 async def test_service_refresh_token(db: DBManager, get_user):
     user = get_user
     user_service = UserService(db)
-    data = await user_service.login(user.email, "1234abcd")
+    data = await user_service.login(user.email, "1234abcd", "127.0.0.1")
 
     res = await user_service.refresh_token(data["refresh_token"])
     assert isinstance(res, dict)
@@ -104,7 +104,7 @@ async def test_service_refresh_token(db: DBManager, get_user):
 async def test_service_refresh_token_with_wrong_refresh_token(db: DBManager, get_user):
     user = get_user
     user_service = UserService(db)
-    data = await user_service.login(user.email, "1234abcd")
+    data = await user_service.login(user.email, "1234abcd", "127.0.0.1")
 
     with pytest.raises(CredentialsException):
         await user_service.refresh_token(data["refresh_token"] + "abc")

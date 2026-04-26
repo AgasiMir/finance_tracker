@@ -11,5 +11,7 @@ celery_instance = Celery(
 )
 
 # Данные команды нужны для запуска в консоли в среде Windows при локальном запуске
+# Даже при локальном запуске приложения, flower в docker-compose.yml должен
+# запускать с .env.prod
 "celery -A app.tasks.celery_app:celery_instance worker --loglevel=info -P gevent"
 "celery --app=app.tasks.celery_app:celery_instance flower"
