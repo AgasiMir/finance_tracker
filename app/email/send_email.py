@@ -6,6 +6,8 @@ import aiosmtplib
 async def send_email(recipient: str, subject: str, body: str) -> None:
     """Отправляет электронное письмо через локальный SMTP сервер.
 
+    Используется c background tasks.
+
     Использует фиксированный адрес отправителя admin@finance-tracker.org
     и SMTP сервер localhost:1025 (например, MailHog для тестирования).
 

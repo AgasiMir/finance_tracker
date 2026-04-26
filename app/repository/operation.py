@@ -139,6 +139,7 @@ class OperationRepository:
             "message": f"Wallet {operation.wallet_name!r} balance increased by {operation.amount}",
             "description": operation.description,
             "new_balance": wallet.balance,
+            "wallet_user": wallet.user,
         }
 
     async def withdraw_money(
@@ -184,6 +185,7 @@ class OperationRepository:
             "message": f"Wallet {operation.wallet_name!r} balance decreased by {operation.amount}",
             "description": operation.description,
             "new_balance": wallet.balance,
+            "wallet_user": wallet.user,
         }
 
     async def transfer_money(self, transfer: TransferMoneyCreate, user_id: int) -> dict:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 from fastapi_cache.decorator import cache
@@ -28,8 +28,6 @@ from app.exceptions.fastapi_exceptions import (
     InsufficientFundsHTTPException,
     WalletNotFoundHTTPException,
 )
-
-from app.email import send_email
 
 
 router = APIRouter(
@@ -70,19 +68,8 @@ async def get_my_operations(
     summary="Add money",
     response_model=OperationPublic,
 )
-async def add_money(
-    operation: OperationCreate,
-    db: DBDep,
-    current_user: UserDep,
-    background_tasks: BackgroundTasks,
-):
+async def add_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
     try:
-        background_tasks.add_task(
-            send_email,
-            current_user.email,
-            "Пополнение кошелька",
-            body=f"Вы пополнили кошелек {operation.wallet_name} на сумму: {operation.amount}",
-        )
         return await OperationService(db).add_money(operation, current_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)
@@ -94,19 +81,8 @@ async def add_money(
     summary="Withdraw money",
     response_model=OperationPublic,
 )
-async def withdraw_money(
-    operation: OperationCreate,
-    db: DBDep,
-    current_user: UserDep,
-    background_tasks: BackgroundTasks,
-):
+async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
     try:
-        background_tasks.add_task(
-            send_email,
-            current_user.email,
-            "Пополнение кошелька",
-            body=f"Вы сняли {operation.amount} с кошелека {operation.wallet_name}",
-        )
         return await OperationService(db).withdraw_money(operation, current_user.id)
     except WalletNotFoundException as err:
         raise WalletNotFoundHTTPException(err.detail)

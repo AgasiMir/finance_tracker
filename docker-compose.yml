@@ -1,5 +1,6 @@
 services:
   
+
   # finance_tracker:
   #   build: .
   #   container_name: finance_tracker
@@ -33,6 +34,7 @@ services:
       retries: 5
     restart: unless-stopped
 
+
   redis:
     image: redis:7
     container_name: finance_tracker_redis
@@ -50,6 +52,7 @@ services:
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning    
 
+
   redis_gui:
     image: redis/redisinsight
     ports:
@@ -57,7 +60,57 @@ services:
     networks:
       - finance_tracker_network
 
+
+  rabbitmq:
+      image: rabbitmq:4.1.1-management-alpine
+      container_name: finance_tracker_rabbit
+      hostname: rabbitmq
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      volumes:
+        - rabbitmq_data:/var/lib/rabbitmq
+      networks:
+        - finance_tracker_network 
+      restart: unless-stopped
+      env_file: .env.dev
+      healthcheck:
+        test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+
+
+  finance_tracker_celery_service:
+    build: .
+    container_name: finance_tracker_celery
+    env_file:
+      - .env.dev
+    networks:
+      - finance_tracker_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    command: celery -A app.tasks.celery_app:celery_instance worker --loglevel=info
   
+
+  finance_tracker_flower_service:
+    build: .
+    container_name: finance_tracker_flower
+    env_file:
+      - .env.prod
+    ports:
+      - "5555:5555"
+    networks:
+      - finance_tracker_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    command: celery --app=app.tasks.celery_app:celery_instance flower
+
+
   maildev:
     image: maildev/maildev
     environment:
@@ -84,6 +137,7 @@ services:
     networks:
       - finance_tracker_network
 
+
   grafana:
     image: grafana/grafana:latest
     ports:
@@ -93,9 +147,11 @@ services:
     networks:
       - finance_tracker_network
 
+
 volumes:
   finance_tracker_data:
   redis_data:
+  rabbitmq_data:
 
 
 networks:

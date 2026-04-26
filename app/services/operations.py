@@ -1,4 +1,5 @@
 from fastapi_cache import FastAPICache
+from app.email.send_email_async import send_email_async
 from app.schemas import OperationCreate, TransferMoneyCreate, OperationsHistory
 from app.uow.uow import DBManager
 
@@ -59,7 +60,11 @@ class OperationService:
 
         Raises:
             Исключения из репозитория, если операция не удалась.
+
+        Notes:
+            При успешном пополнении отправляет письмо на email пользователя.
         """
+
         res = await self.operation_repo.operations.add_money(operation, user_id)
 
         if res:
@@ -69,6 +74,13 @@ class OperationService:
 
             # Инвалидация кэша всех wallet конкретного user
             await FastAPICache.clear(namespace=f"all-wallets:{user_id}")
+
+            # Отправка email
+            send_email_async.delay(
+                res["wallet_user"].email,
+                "Пополнение кошелька",
+                f"Вы пополнили кошелек {operation.wallet_name} на сумму: {operation.amount}",
+            )
 
             return res
 
@@ -87,7 +99,11 @@ class OperationService:
 
         Raises:
             Исключения из репозитория, если операция не удалась.
+
+        Notes:
+            При успешном снятии отправляет письмо на email пользователя.
         """
+
         res = await self.operation_repo.operations.withdraw_money(operation, user_id)
 
         if res:
@@ -97,6 +113,13 @@ class OperationService:
 
             # Инвалидация кэша всех wallet конкретного user
             await FastAPICache.clear(namespace=f"all-wallets:{user_id}")
+
+            # Отправка email
+            send_email_async.delay(
+                res["wallet_user"].email,
+                "Снятие денег с кошелька",
+                body=f"Вы сняли {operation.amount} с кошелека {operation.wallet_name}",
+            )
 
             return res
 
