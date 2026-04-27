@@ -19,7 +19,7 @@ async def get_token(db):
     - Возвращает только токен (без настройки клиента).
 
     Является альтернативой фикстуре `authenticated_ac` в случаях, когда:
-        - Нужно получить токен без выполнения реального запроса к /users/token.
+        - Нужно получить токен без выполнения реального запроса к /api/v1/users/token.
         - Требуется протестировать логику обработки токена вне HTTP-слоя.
         - Упрощается тестирование внутренних зависимостей (например, `get_current_user`).
 
@@ -34,7 +34,7 @@ async def get_token(db):
 
         async def test_protected_route_with_manual_header(async_client, get_token):
             async_client.headers["Authorization"] = f"Bearer {get_token}"
-            response = await async_client.get("/users/me")
+            response = await async_client.get("/api/v1/users/me")
             assert response.status_code == 200
 
     Важно:

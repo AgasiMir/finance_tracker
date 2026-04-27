@@ -9,7 +9,7 @@ from app.exceptions.python_exceptions import (
 
 async def test_create_user(async_client):
     response = await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
     assert response.status_code == 201
@@ -17,11 +17,11 @@ async def test_create_user(async_client):
 
 async def test_login_user(async_client):
     await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
     response = await async_client.post(
-        "/users/token",
+        "/api/v1/users/token",
         data={"username": "user@example.com", "password": "1234abcd"},
     )
     assert response.status_code == 200
@@ -31,19 +31,19 @@ async def test_login_user(async_client):
 
 async def test_refresh_token(async_client):
     await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
 
     response = await async_client.post(
-        "/users/token",
+        "/api/v1/users/token",
         data={"username": "user@example.com", "password": "1234abcd"},
     )
 
     refresh_token = response.json()["refresh_token"]
 
     res = await async_client.post(
-        "/users/refresh-token",
+        "/api/v1/users/refresh-token",
         json={"refresh_token": refresh_token},
     )
 
@@ -54,7 +54,7 @@ async def test_refresh_token(async_client):
 
 async def test_create_user_that_already_exists(async_client):
     await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
 
@@ -62,7 +62,7 @@ async def test_create_user_that_already_exists(async_client):
         mock_method.side_effect = UserAlreadyExistsException
 
         response = await async_client.post(
-            "/users/create-user",
+            "/api/v1/users/create-user",
             json={"email": "user@example.com", "password": "12345abcde"},
         )
 
@@ -72,7 +72,7 @@ async def test_create_user_that_already_exists(async_client):
 
 async def test_login_user_with_wrong_credentials(async_client):
     await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
 
@@ -80,7 +80,7 @@ async def test_login_user_with_wrong_credentials(async_client):
         mock_method.side_effect = IncorrectCredentialsException
 
         response = await async_client.post(
-            "/users/token",
+            "/api/v1/users/token",
             data={"username": "user@example.com", "password": "1234abcd_"},
         )
         assert response.status_code == 401
@@ -89,12 +89,12 @@ async def test_login_user_with_wrong_credentials(async_client):
 
 async def test_refresh_token_with_wrong_refresh_token(async_client):
     await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "user@example.com", "password": "1234abcd"},
     )
 
     response = await async_client.post(
-        "/users/token",
+        "/api/v1/users/token",
         data={"username": "user@example.com", "password": "1234abcd"},
     )
 
@@ -104,7 +104,7 @@ async def test_refresh_token_with_wrong_refresh_token(async_client):
         mock_method.side_effect = CredentialsException
 
         res = await async_client.post(
-            "/users/refresh-token",
+            "/api/v1/users/refresh-token",
             json={"refresh_token": refresh_token},
         )
 

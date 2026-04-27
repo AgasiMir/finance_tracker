@@ -20,7 +20,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.services.users import UserService
 
 router = APIRouter(
-    prefix="/users",
+    prefix="/api/v1/users",
     tags=["users 👨🏻👱🏻‍♀️🧒🏻"],
     dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(2, Duration.SECOND * 2))))],
 )

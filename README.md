@@ -216,9 +216,9 @@ FastAPI автоматически генерирует полную интер�
 ### Основные endpoint'ы
 
 #### Аутентификация
-- `POST /api/v1/users/register` - регистрация нового пользователя
-- `POST /api/v1/users/login` - вход и получение JWT токена
-- `GET /api/v1/users/me` - информация о текущем пользователе
+- `POST /api/v1/api/v1/users/register` - регистрация нового пользователя
+- `POST /api/v1/api/v1/users/login` - вход и получение JWT токена
+- `GET /api/v1/api/v1/users/me` - информация о текущем пользователе
 
 #### Кошельки
 - `POST /api/v1/walletss/` - создание нового кошелька
@@ -241,7 +241,7 @@ FastAPI автоматически генерирует полную интер�
 
 #### 1. Регистрация пользователя
 ```bash
-curl -X POST "http://localhost:8000/api/v1/users/register" \
+curl -X POST "http://localhost:8000/api/v1/api/v1/users/register" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "john_doe",
@@ -252,7 +252,7 @@ curl -X POST "http://localhost:8000/api/v1/users/register" \
 
 #### 2. Вход и получение токена
 ```bash
-curl -X POST "http://localhost:8000/api/v1/users/login" \
+curl -X POST "http://localhost:8000/api/v1/api/v1/users/login" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "john_doe",
@@ -314,8 +314,8 @@ curl -X GET "http://localhost:8000/health/check-db"
 
 API использует JWT (JSON Web Tokens) для аутентификации. Для доступа к защищенным endpoint'ам необходимо:
 
-1. Зарегистрироваться через `/api/v1/users/register`
-2. Войти через `/api/v1/users/login` для получения токена
+1. Зарегистрироваться через `/api/v1/api/v1/users/register`
+2. Войти через `/api/v1/api/v1/users/login` для получения токена
 3. Добавить заголовок `Authorization: Bearer <your_token>` к запросам
 
 Пример запроса с токеном:

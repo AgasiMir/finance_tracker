@@ -151,7 +151,7 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 
     Пример использования:
         async def test_read_root(async_client):
-            response = await async_client.get("/users")
+            response = await async_client.get("/api/v1/users")
             assert response.status_code == 200
 
     Возвращаемое значение:
@@ -178,7 +178,7 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture(scope="function")
 async def register_user(async_client):
     response = await async_client.post(
-        "/users/create-user",
+        "/api/v1/users/create-user",
         json={"email": "test@example.com", "password": "1234abcd"},
     )
     assert response.status_code == 201, f"Failed to create user: {response.text}"
@@ -191,7 +191,7 @@ async def authenticated_ac(register_user, async_client):
 
     Эта фикстура:
     - Использует заранее зарегистрированного пользователя (через фикстуру `register_user`).
-    - Выполняет вход (аутентификацию) через POST-запрос к эндпоинту `/users/token`.
+    - Выполняет вход (аутентификацию) через POST-запрос к эндпоинту `/api/v1/users/token`.
     - Получает JWT-токен доступа.
     - Устанавливает заголовок `Authorization: Bearer <token>` для клиента.
     - Возвращает настроенный экземпляр `AsyncClient`, готовый к вызову защищённых эндпоинтов.
@@ -203,7 +203,7 @@ async def authenticated_ac(register_user, async_client):
 
     Пример использования:
         async def test_get_profile(authenticated_ac):
-            response = await authenticated_ac.get("/users/me")
+            response = await authenticated_ac.get("/api/v1/users/me")
             assert response.status_code == 200
 
     Важно:
@@ -215,7 +215,7 @@ async def authenticated_ac(register_user, async_client):
     """
 
     response = await async_client.post(
-        "/users/token",
+        "/api/v1/users/token",
         data={"username": "test@example.com", "password": "1234abcd"},
     )
 

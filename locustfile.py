@@ -19,7 +19,7 @@ class FinanceTrackerUser(HttpUser):
 
         # 1. Создаем пользователя
         create_response = self.client.post(
-            "/users/create-user",
+            "/api/v1/users/create-user",
             json={
                 "email": self.email,
                 "password": self.password,
@@ -34,7 +34,7 @@ class FinanceTrackerUser(HttpUser):
 
         # 2. Логинимся для получения токена (OAuth2 форма)
         login_response = self.client.post(
-            "/users/token",
+            "/api/v1/users/token",
             data={"username": self.email, "password": self.password},
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
