@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Body, Depends, status
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 from fastapi_cache.decorator import cache
@@ -68,7 +68,30 @@ async def get_my_operations(
     summary="Add money",
     response_model=OperationPublic,
 )
-async def add_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
+async def add_money(
+    db: DBDep,
+    current_user: UserDep,
+    operation: OperationCreate = Body(
+        openapi_examples={
+            "1": {
+                "summary": "add money to wallet A",
+                "value": {
+                    "wallet_name": "A",
+                    "amount": 1000,
+                    "description": "add money to wallet A description",
+                },
+            },
+            "2": {
+                "summary": "add money to wallet B",
+                "value": {
+                    "wallet_name": "B",
+                    "amount": 2000,
+                    "description": None,
+                },
+            },
+        }
+    ),
+):
     try:
         return await OperationService(db).add_money(operation, current_user.id)
     except WalletNotFoundException as err:
@@ -81,7 +104,30 @@ async def add_money(operation: OperationCreate, db: DBDep, current_user: UserDep
     summary="Withdraw money",
     response_model=OperationPublic,
 )
-async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: UserDep):
+async def withdraw_money(
+    db: DBDep,
+    current_user: UserDep,
+    operation: OperationCreate = Body(
+        openapi_examples={
+            "1": {
+                "summary": "withdraw money from  wallet A",
+                "value": {
+                    "wallet_name": "A",
+                    "amount": 1000,
+                    "description": "withdraw money from wallet A description",
+                },
+            },
+            "2": {
+                "summary": "withdraw money from wallet B",
+                "value": {
+                    "wallet_name": "B",
+                    "amount": 2000,
+                    "description": None,
+                },
+            },
+        }
+    ),
+):
     try:
         return await OperationService(db).withdraw_money(operation, current_user.id)
     except WalletNotFoundException as err:
@@ -97,7 +143,20 @@ async def withdraw_money(operation: OperationCreate, db: DBDep, current_user: Us
     response_model=TransferMoneyPublic,
 )
 async def transfer_money(
-    transfer: TransferMoneyCreate, db: DBDep, current_user: UserDep
+    db: DBDep,
+    current_user: UserDep,
+    transfer: TransferMoneyCreate = Body(
+        openapi_examples={
+            "1": {
+                "summary": "transfer money from wallet A to wallet B",
+                "value": {
+                    "wallet_from": "A",
+                    "wallet_to": "B",
+                    "amount": 1000,
+                },
+            },
+        }
+    ),
 ):
     try:
         return await OperationService(db).transfer_money(transfer, current_user.id)

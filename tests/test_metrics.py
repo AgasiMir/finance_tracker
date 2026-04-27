@@ -7,7 +7,7 @@ async def test_metrics_endpoint(async_client):
 async def test_request_increments_counters(async_client):
     # Выполняем запрос, чтобы сработал middleware
     await async_client.get(
-        "/api/v1/wallet/my-wallets",
+        "/api/v1/wallets/my-wallets",
         params={"page": 1, "page_size": 10},
     )
 

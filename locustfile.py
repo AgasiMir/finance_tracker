@@ -51,14 +51,14 @@ class FinanceTrackerUser(HttpUser):
 
         # Создаем кошелек rub
         self.client.post(
-            "/api/v1/wallet/create-wallet",
+            "/api/v1/wallets/create-wallet",
             headers=self.headers,
             json={"name": "rub"},
         )
 
         # Создаем кошелек usd
         self.client.post(
-            "/api/v1/wallet/create-wallet",
+            "/api/v1/wallets/create-wallet",
             headers=self.headers,
             json={"name": "usd"},
         )
@@ -78,7 +78,7 @@ class FinanceTrackerUser(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "/api/v1/wallet/rub",
+            "/api/v1/wallets/rub",
             headers=self.headers,
         )
 
@@ -87,7 +87,7 @@ class FinanceTrackerUser(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "/api/v1/wallet/usd",
+            "/api/v1/wallets/usd",
             headers=self.headers,
         )
 
@@ -96,7 +96,7 @@ class FinanceTrackerUser(HttpUser):
         if not self.token:
             return
         self.client.get(
-            "/api/v1/wallet/my-wallets",
+            "/api/v1/wallets/my-wallets",
             headers=self.headers,
         )
 
@@ -113,7 +113,7 @@ class FinanceTrackerUser(HttpUser):
         for _ in range(1, 20):
             time.sleep(0.5)
             self.client.post(
-                "/api/v1/wallet/create-wallet",
+                "/api/v1/wallets/create-wallet",
                 headers=self.headers,
                 json={"name": "rub" + str(random.randint(1, 1_000_000))},
             )

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Body
 from pyrate_limiter import Duration, Limiter, Rate
 from fastapi_limiter.depends import RateLimiter
 from fastapi_cache.decorator import cache
@@ -20,7 +20,7 @@ from app.cache_key_builders import key_builder_for_list_of_wallets
 
 
 router = APIRouter(
-    prefix="/api/v1/wallet",
+    prefix="/api/v1/wallets",
     tags=["wallets 💰💰💰"],
     dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 2))))],
 )
@@ -55,8 +55,28 @@ async def get_wallet_by_name(db: DBDep, wallet_name: str, current_user: UserDep)
     summary="Create new wallet",
     response_model=WalletPublic,
 )
-async def create_wallet(db: DBDep, wallet: WalletCreate, current_user: UserDep):
-
+async def create_wallet(
+    db: DBDep,
+    current_user: UserDep,
+    wallet: WalletCreate = Body(
+        openapi_examples={
+            "1": {
+                "summary": "wallet A",
+                "value": {
+                    "name": "A",
+                    "description": "description for wallet A",
+                },
+            },
+            "2": {
+                "summary": "wallet B",
+                "value": {
+                    "name": "B",
+                    "description": None,
+                },
+            },
+        }
+    ),
+):
     try:
         return await WalletService(db).create_wallet(wallet, current_user.id)
     except WalletAlreadyExistsException:

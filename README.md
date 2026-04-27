@@ -221,11 +221,11 @@ FastAPI автоматически генерирует полную интер�
 - `GET /api/v1/users/me` - информация о текущем пользователе
 
 #### Кошельки
-- `POST /api/v1/wallets/` - создание нового кошелька
-- `GET /api/v1/wallets/` - список кошельков пользователя
-- `GET /api/v1/wallets/{wallet_id}` - информация о кошельке
-- `PUT /api/v1/wallets/{wallet_id}` - обновление кошелька
-- `DELETE /api/v1/wallets/{wallet_id}` - удаление кошелька
+- `POST /api/v1/walletss/` - создание нового кошелька
+- `GET /api/v1/walletss/` - список кошельков пользователя
+- `GET /api/v1/walletss/{wallet_id}` - информация о кошельке
+- `PUT /api/v1/walletss/{wallet_id}` - обновление кошелька
+- `DELETE /api/v1/walletss/{wallet_id}` - удаление кошелька
 
 #### Операции
 - `POST /api/v1/operations/add-money` - пополнение кошелька
@@ -270,7 +270,7 @@ curl -X POST "http://localhost:8000/api/v1/users/login" \
 
 #### 3. Создание кошелька
 ```bash
-curl -X POST "http://localhost:8000/api/v1/wallets/" \
+curl -X POST "http://localhost:8000/api/v1/walletss/" \
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -321,7 +321,7 @@ API использует JWT (JSON Web Tokens) для аутентификаци
 Пример запроса с токеном:
 ```bash
 curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-  http://localhost:8000/api/v1/wallets/
+  http://localhost:8000/api/v1/walletss/
 ```
 
 ## 🧪 Тестирование

@@ -16,7 +16,7 @@ async def wallets(authenticated_ac):
 
     Эта фикстура:
     - Использует уже авторизованный клиент (`authenticated_ac`).
-    - Создаёт два кошелька с именами 'rub' и 'rub-2' через POST-запрос к `/api/v1/wallet/create-wallet`.
+    - Создаёт два кошелька с именами 'rub' и 'rub-2' через POST-запрос к `/api/v1/wallets/create-wallet`.
     - Не возвращает значение, а просто гарантирует, что кошельки существуют перед запуском теста.
 
     Используется в тестах операций (пополнение, снятие, перевод), где требуется предварительная
@@ -43,12 +43,12 @@ async def wallets(authenticated_ac):
     """
 
     await authenticated_ac.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub"},
     )
 
     await authenticated_ac.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub-2"},
     )
 

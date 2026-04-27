@@ -57,7 +57,7 @@ async def get_token(db):
 
 async def test_get_empty_list_of_wallets(get_token, async_client):
     response = await async_client.get(
-        "/api/v1/wallet/my-wallets",
+        "/api/v1/wallets/my-wallets",
         headers={"Authorization": f"Bearer {get_token}"},
     )
     assert response.status_code == 200
@@ -66,19 +66,19 @@ async def test_get_empty_list_of_wallets(get_token, async_client):
 
 async def test_get_list_of_wallets_with_pagination(get_token, async_client):
     await async_client.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub"},
         headers={"Authorization": f"Bearer {get_token}"},
     )
 
     await async_client.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "usd"},
         headers={"Authorization": f"Bearer {get_token}"},
     )
 
     response = await async_client.get(
-        "/api/v1/wallet/my-wallets",
+        "/api/v1/wallets/my-wallets",
         headers={"Authorization": f"Bearer {get_token}"},
         params={"page": 2, "page_size": 1},
     )
@@ -89,13 +89,13 @@ async def test_get_list_of_wallets_with_pagination(get_token, async_client):
 
 async def test_get_wallet_by_name(get_token, async_client):
     await async_client.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub"},
         headers={"Authorization": f"Bearer {get_token}"},
     )
 
     response = await async_client.get(
-        "/api/v1/wallet/rub",
+        "/api/v1/wallets/rub",
         headers={"Authorization": f"Bearer {get_token}"},
     )
     assert response.status_code == 200
@@ -104,7 +104,7 @@ async def test_get_wallet_by_name(get_token, async_client):
 
 async def test_create_wallet(get_token, async_client):
     response = await async_client.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub"},
         headers={"Authorization": f"Bearer {get_token}"},
     )
@@ -115,7 +115,7 @@ async def test_create_wallet(get_token, async_client):
 async def test_get_not_existing_wallet_by_name(get_token, async_client):
     wallet_name = "not_existing_wallet"
     response = await async_client.get(
-        f"/api/v1/wallet/{wallet_name}",
+        f"/api/v1/wallets/{wallet_name}",
         headers={"Authorization": f"Bearer {get_token}"},
     )
     assert response.status_code == 404
@@ -130,7 +130,7 @@ async def test_get_not_existing_wallet_by_name_2(get_token, async_client):
         mock_method.side_effect = WalletNotFoundException(wallet_name)
 
         response = await async_client.get(
-            f"/api/v1/wallet/{wallet_name}",
+            f"/api/v1/wallets/{wallet_name}",
             headers={"Authorization": f"Bearer {get_token}"},
         )
 
@@ -140,7 +140,7 @@ async def test_get_not_existing_wallet_by_name_2(get_token, async_client):
 
 async def test_create_wallets_with_the_same_name(get_token, async_client):
     await async_client.post(
-        "/api/v1/wallet/create-wallet",
+        "/api/v1/wallets/create-wallet",
         json={"name": "rub"},
         headers={"Authorization": f"Bearer {get_token}"},
     )
@@ -149,7 +149,7 @@ async def test_create_wallets_with_the_same_name(get_token, async_client):
         mock_method.side_effect = WalletAlreadyExistsException
 
         response = await async_client.post(
-            "/api/v1/wallet/create-wallet",
+            "/api/v1/wallets/create-wallet",
             json={"name": "rub"},
             headers={"Authorization": f"Bearer {get_token}"},
         )
