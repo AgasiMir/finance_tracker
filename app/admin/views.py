@@ -81,7 +81,11 @@ class OperationAdmin(ModelView, model=Operation):
     column_type_formatters = dict(
         ModelView.column_type_formatters, created_at=date_format
     )
-    column_formatters = {Operation.description: lambda m, a: m.description[:20] + "..."}
+    column_formatters = {
+        Operation.description: lambda m, a: (
+            m.description[:20] + "..." if m.description else m.description
+        )
+    }
     # Pagination options
     page_size = 10
     page_size_options = [10, 20, 50]

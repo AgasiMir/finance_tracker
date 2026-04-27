@@ -1,6 +1,5 @@
 services:
   
-
   # finance_tracker:
   #   build: .
   #   container_name: finance_tracker
@@ -125,6 +124,8 @@ services:
         "json-file"
       options:
         max-size: "1m"
+    networks:
+      - finance_tracker_network
 
 
   prometheus:

@@ -33,7 +33,7 @@ from app.exceptions.fastapi_exceptions import (
 router = APIRouter(
     prefix="/api/v1/operations",
     tags=["operations 💵💶💷💴"],
-    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(5, Duration.SECOND * 2))))],
+    dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(25, Duration.SECOND * 2))))],
 )
 
 
