@@ -123,18 +123,3 @@ class TestRedisManager:
         # Проверка
         mock_redis.close.assert_awaited_once()
         assert redis_manager.redis is None
-
-
-# @pytest.fixture
-# def redis_manager():
-#     return RedisManager(host="localhost", port=6379)
-
-
-# async def test_redis(redis_manager):
-#     with patch("app.connectors.redis_connector.redis.Redis") as mock_redis:
-#         mock_redis.side_effect = Exception("Connection failed")
-
-#         with pytest.raises(Exception, match="Connection failed"):
-#             await redis_manager.connect()
-
-#     mock_redis.assert_called_once()

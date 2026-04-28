@@ -13,48 +13,108 @@
 
 - **Полностью асинхронный** - FastAPI + async/await для высокой производительности
 - **Чистая архитектура** - разделение на слои (API, сервисы, репозитории, модели)
-- **Unit of Work** - паттерн для управления транзакциями
-- **Кэширование Redis** - для ускорения частых запросов
-- **JWT аутентификация** - безопасный доступ к API
-- **Лимитирование запросов** - защита от DDoS атак
-- **Пагинация и фильтрация** - для работы с большими объемами данных
-- **Миграции базы данных** - Alembic для управления схемой БД
-- **Высокое тестовое покрытие** - 94% покрытие кода тестами
-- **Docker контейнеризация** - готовность к деплою
+- **Unit of Work** - паттерн для управления транзакциями и обеспечения целостности данных
+- **Кэширование Redis** - интеллектуальное кэширование через fastapi-cache2 с автоматической инвалидацией
+- **JWT аутентификация** - безопасный доступ к API с поддержкой ролей пользователей
+- **Лимитирование запросов** - защита от DDoS атак через fastapi-limiter
+- **Пагинация и фильтрация** - продвинутая фильтрация операций по датам, типам и суммам
+- **Миграции базы данных** - Alembic для управления схемой БД с автоматической генерацией
+- **Высокое тестовое покрытие** - 94% покрытие кода тестами (pytest + pytest-cov)
+- **Docker контейнеризация** - готовность к деплою с Docker Compose
+- **Панель администратора** - SQLAdmin для управления данными через веб-интерфейс
+- **Мониторинг метрик** - Prometheus метрики для отслеживания производительности
+- **Логирование запросов** - middleware для детального логирования всех HTTP-запросов
+- **Асинхронная отправка email** - фоновые email-уведомления через aiosmtplib
+- **Фоновые задачи** - Celery для обработки длительных операций
+- **Декораторы retry** - автоматические повторные попытки при сбоях
+- **Health checks** - проверка состояния БД, Redis и других сервисов
+- **Индексы БД** - оптимизированные индексы для часто запрашиваемых полей
 
 ## 📦 Технологический стек
 
+### Основной стек
 - **Python 3.12** - основной язык программирования
-- **FastAPI** - веб-фреймворк для построения API
-- **SQLAlchemy 2.0** - ORM для работы с базой данных
-- **PostgreSQL** - основная реляционная база данных
-- **Redis** - кэширование и хранение сессий
+- **FastAPI** - веб-фреймворк для построения высокопроизводительных API
+- **SQLAlchemy 2.0** - асинхронный ORM для работы с базой данных
+- **PostgreSQL 17** - основная реляционная база данных
+- **Redis 7** - кэширование, сессии и брокер сообщений
 - **Pydantic** - валидация данных и схемы
 - **Alembic** - миграции базы данных
-- **JWT** - аутентификация и авторизация
-- **Docker & Docker Compose** - контейнеризация
-- **pytest** - тестирование с покрытием
+- **JWT (PyJWT)** - аутентификация и авторизация
+- **Docker & Docker Compose** - контейнеризация и оркестрация
 - **uv** - современный менеджер пакетов Python
+
+### Дополнительные технологии
+- **SQLAdmin** - панель администратора для управления данными
+- **Prometheus Client** - сбор метрик производительности
+- **FastAPI Cache2** - кэширование ответов API
+- **FastAPI Limiter** - лимитирование запросов
+- **Celery** - распределенная очередь задач
+- **Flower** - мониторинг Celery задач
+- **aiosmtplib** - асинхронная отправка email
+- **Loguru** - структурированное логирование
+- **bcrypt** - хеширование паролей
+- **asyncpg** - асинхронный драйвер PostgreSQL
+
+### Инструменты разработки
+- **pytest** - тестирование с покрытием
+- **pytest-asyncio** - асинхронное тестирование
+- **pytest-cov** - измерение покрытия кода
+- **ruff** - линтинг и форматирование
+- **locust** - нагрузочное тестирование
+
+### Мониторинг и инфраструктура
+- **Grafana** - визуализация метрик
+- **Prometheus** - сбор и хранение метрик
+- **RedisInsight** - GUI для мониторинга Redis
 
 ## 🏗️ Архитектура
 
-Проект следует принципам чистой архитектуры с четким разделением ответственности:
+Проект следует принципам чистой архитектуры с четким разделением ответственности и использованием паттернов проектирования:
+
+### Слои приложения
 
 ```
 app/
-├── api/              # Маршруты и обработчики HTTP-запросов
-│   ├── v1/          # API версии 1
-│   └── dependencies.py
-├── core/            # Ядро приложения (настройки БД)
-├── models/          # SQLAlchemy модели
-├── repository/      # Репозитории для доступа к данным
-├── services/        # Бизнес-логика
-├── schemas/         # Pydantic схемы для валидации
-├── uow/             # Unit of Work паттерн
-├── utils/           # Вспомогательные утилиты
-├── connectors/      # Коннекторы к внешним сервисам (Redis)
-└── exceptions/      # Кастомные исключения
+├── api/                    # Маршруты и обработчики HTTP-запросов
+│   ├── v1/                # API версии 1 (операции, кошельки, пользователи)
+│   ├── dependencies.py    # Зависимости для внедрения в эндпоинты
+│   └── health.py          # Health check эндпоинты
+├── admin/                 # Панель администратора SQLAdmin
+│   ├── auth.py           # Аутентификация для админки
+│   └── views.py          # Представления для моделей
+├── cache_key_builders/    # Построители ключей для кэширования
+├── connectors/            # Коннекторы к внешним сервисам (Redis)
+├── core/                  # Ядро приложения (настройки БД, зависимости)
+├── decorators/            # Декораторы (retry, timing и др.)
+├── email/                 # Отправка email (синхронная и асинхронная)
+├── exceptions/            # Кастомные исключения (FastAPI и Python)
+├── middlewares/           # Middleware (логирование, кэширование, метрики)
+├── models/                # SQLAlchemy модели (User, Wallet, Operation)
+├── repository/            # Репозитории для доступа к данным
+├── schemas/               # Pydantic схемы для валидации и сериализации
+├── services/              # Бизнес-логика приложения
+├── tasks/                 # Фоновые задачи Celery
+├── uow/                   # Unit of Work паттерн для управления транзакциями
+└── utils/                 # Вспомогательные утилиты (пагинация, фильтрация, метрики)
 ```
+
+### Ключевые паттерны
+
+1. **Repository Pattern** - абстракция доступа к данным
+2. **Unit of Work** - управление транзакциями и обеспечение целостности
+3. **Dependency Injection** - внедрение зависимостей через FastAPI Depends
+4. **Service Layer** - изоляция бизнес-логики от слоя данных
+5. **Middleware Chain** - обработка запросов через цепочку middleware
+6. **CQRS** - разделение операций чтения и записи (в части кэширования)
+
+### Поток данных
+
+1. **HTTP Request** → **Middleware** (логирование, кэширование, метрики)
+2. **Router** → **Dependencies** (аутентификация, валидация)
+3. **Service** → **Repository/UoW** (бизнес-логика, доступ к данным)
+4. **Database/Redis** → **Response** (сериализация через Pydantic)
+5. **Background Tasks** → **Celery** (асинхронная обработка)
 
 ## 🚀 Быстрый старт
 
@@ -172,10 +232,6 @@ uv run pytest
 3. Настроить reverse proxy (nginx) с SSL/TLS
 4. Включить мониторинг и логирование
 
-Пример production Docker команды:
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
 
 ## 📚 API Документация и тестирование
 
@@ -186,147 +242,95 @@ FastAPI автоматически генерирует полную интер�
 - **Swagger UI**: `http://localhost:8000/docs` - интерактивная документация с возможностью тестирования API прямо в браузере
   - Позволяет отправлять реальные запросы к API
   - Отображает схемы запросов и ответов
-  - Включает авторизацию через JWT токены
-  - Показывает примеры кода для различных языков
+  - Включает авторизацию через JWT токены (кнопка "Authorize")
+  - Показывает примеры кода для различных языков (cURL, Python, JavaScript)
+  - Поддерживает загрузку файлов и тестирование всех эндпоинтов
 
 - **ReDoc**: `http://localhost:8000/redoc` - альтернативная, более читаемая документация
   - Чистый и минималистичный интерфейс
-  - Удобна для изучения структуры API
+  - Удобна для изучения структуры API и документации
   - Автоматическая группировка эндпоинтов по тегам
+  - Отображение схем данных в виде древовидной структуры
 
 - **OpenAPI спецификация**: `http://localhost:8000/openapi.json` - машинно-читаемая спецификация API
   - Может быть импортирована в Postman, Insomnia и другие инструменты
   - Используется для генерации клиентских SDK
+  - Соответствует стандарту OpenAPI 3.0
 
 ### Мониторинг и здоровье системы
 
-- **Health Check**: `http://localhost:8000/health/check-db` - проверка подключения к БД
-- **Prometheus метрики**: `http://localhost:8000/metrics` - метрики производительности приложения
+- **Health Checks**:
+  - `http://localhost:8000/health/check-db` - проверка подключения к БД
+  - `http://localhost:8000/health/metrics` - метрики Prometheus
+
+
+- **Prometheus метрики**: `http://localhost:8000/metrics` - метрики производительности приложения в формате Prometheus
+  - HTTP запросы: количество, длительность, статус коды
+  - Бизнес-метрики: операции, пользователи, кошельки
+  - Системные метрики: использование памяти, GC
+
 - **Панель администратора**: `http://localhost:8000/admin` - управление данными через SQLAdmin
+  - Аутентификация через JWT
+  - CRUD операции для всех моделей (User, Wallet, Operation)
+  - Поиск, фильтрация и сортировка данных
+  - Экспорт данных в CSV/JSON
+
+- **Grafana Dashboard**: `http://localhost:3000` (если запущен) - визуализация метрик
+  - Предварительно настроенные дашборды для мониторинга приложения
+  - Графики производительности и использования ресурсов
 
 ### Особенности документации
 
 1. **Автоматическое обновление**: Документация всегда актуальна и синхронизирована с кодом
 2. **Валидация схем**: Все Pydantic-схемы автоматически включаются в документацию
 3. **Примеры запросов**: Для каждого эндпоинта генерируются примеры корректных запросов
-4. **Безопасность**: Документация поддерживает OAuth2 и JWT аутентификацию
+4. **Безопасность**: Документация поддерживает JWT аутентификацию
+5. **Тестирование в реальном времени**: Можно отправлять запросы прямо из браузера
+6. **Генерация клиентского кода**: Возможность экспорта клиентов для различных языков
 
 > **Примечание**: В production окружении рекомендуется ограничить доступ к `/docs` и `/redoc` или отключить их с помощью параметра `docs_url=None` и `redoc_url=None` в конструкторе FastAPI.
 
 ### Основные endpoint'ы
 
-#### Аутентификация
-- `POST /api/v1/api/v1/users/register` - регистрация нового пользователя
-- `POST /api/v1/api/v1/users/login` - вход и получение JWT токена
-- `GET /api/v1/api/v1/users/me` - информация о текущем пользователе
+#### Аутентификация и пользователи
+- `POST /api/v1/users/create-user` - регистрация нового пользователя
+- `POST /api/v1/users/token` - вход и получение JWT токена
+- `POST /api/v1/users/refresh-token` - обновляет access_token с помощью refresh_token
+
 
 #### Кошельки
-- `POST /api/v1/walletss/` - создание нового кошелька
-- `GET /api/v1/walletss/` - список кошельков пользователя
-- `GET /api/v1/walletss/{wallet_id}` - информация о кошельке
-- `PUT /api/v1/walletss/{wallet_id}` - обновление кошелька
-- `DELETE /api/v1/walletss/{wallet_id}` - удаление кошелька
+- `POST /api/v1/wallets/create-wallet` - создание нового кошелька
+- `GET /api/v1/wallets/my-wallets` - список кошельков пользователя (с пагинацией)
+- `GET /api/v1/wallets/{wallet_id}` - информация о конкретном кошельке
+
 
 #### Операции
-- `POST /api/v1/operations/add-money` - пополнение кошелька
-- `POST /api/v1/operations/withdraw-money` - снятие средств
-- `POST /api/v1/operations/transfer-money` - перевод между кошельками
-- `GET /api/v1/operations/history` - история операций с пагинацией и фильтрацией
+- `POST /api/v1/operations/my-operations` - история пополнения/снятия средств
+- `POST /api/v1/operations/add` - пополнение кошелька
+- `POST /api/v1/operations/withdraw` - снятие средств с кошелька
+- `POST /api/v1/operations/transfer` - перевод между кошельками
 
-#### Мониторинг
+
+#### Мониторинг и здоровье
+
 - `GET /health/check-db` - проверка подключения к БД
+- `GET /metrics` - Prometheus метрики приложения
 
-
-### Примеры использования API
-
-#### 1. Регистрация пользователя
-```bash
-curl -X POST "http://localhost:8000/api/v1/api/v1/users/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "email": "john@example.com",
-    "password": "secure_password123"
-  }'
-```
-
-#### 2. Вход и получение токена
-```bash
-curl -X POST "http://localhost:8000/api/v1/api/v1/users/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "password": "secure_password123"
-  }'
-```
-
-Ответ:
-```json
-{
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-  "token_type": "bearer"
-}
-```
-
-#### 3. Создание кошелька
-```bash
-curl -X POST "http://localhost:8000/api/v1/walletss/" \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Основной кошелек",
-    "balance": 1000.00,
-    "currency": "RUB"
-  }'
-```
-
-#### 4. Пополнение кошелька
-```bash
-curl -X POST "http://localhost:8000/api/v1/operations/add-money" \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "wallet_name": "Основной кошелек",
-    "amount": 500.00,
-    "description": "Зарплата за апрель"
-  }'
-```
-
-#### 5. Получение истории операций с пагинацией
-```bash
-curl -X GET "http://localhost:8000/api/v1/operations/history?offset=0&limit=10&sort_param=created_at&dir=desc" \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
-```
-
-#### 6. Проверка здоровья БД
-```bash
-curl -X GET "http://localhost:8000/health/check-db"
-```
-
-Ответ:
-```json
-{
-  "version": "PostgreSQL 17.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit"
-}
-```
 
 ## 🔐 Аутентификация
 
 API использует JWT (JSON Web Tokens) для аутентификации. Для доступа к защищенным endpoint'ам необходимо:
 
-1. Зарегистрироваться через `/api/v1/api/v1/users/register`
-2. Войти через `/api/v1/api/v1/users/login` для получения токена
+1. Зарегистрироваться через `/api/v1/users/create-user`
+2. Войти через `/api/v1/users/token` для получения токена
 3. Добавить заголовок `Authorization: Bearer <your_token>` к запросам
 
-Пример запроса с токеном:
-```bash
-curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
-  http://localhost:8000/api/v1/walletss/
-```
 
 ## 🧪 Тестирование
 
-Проект имеет высокое тестовое покрытие (94%, подтверждено pytest-cov). Для запуска тестов:
+Проект имеет высокое тестовое покрытие (94%, подтверждено pytest-cov). Используется комплексный подход к тестированию, включающий unit-тесты, интеграционные тесты и API-тесты.
+
+### Запуск тестов
 
 ```bash
 # Запуск всех тестов с покрытием и HTML отчетом
@@ -336,61 +340,167 @@ uv run pytest --cov=app --cov-report=html
 uv run pytest -v
 
 # Запуск тестов конкретной категории
-uv run pytest tests/test_services/ -v
-uv run pytest tests/test_routers/ -v
+uv run pytest tests/test_services/ -v           # Тесты сервисов
+uv run pytest tests/test_routers/ -v            # Тесты API эндпоинтов
+uv run pytest tests/test_repositories/ -v       # Тесты репозиториев
+uv run pytest tests/test_db/ -v                 # Тесты базы данных
+uv run pytest tests/test_infastructure/ -v      # Тесты инфраструктуры (Redis)
 
 # Запуск тестов с генерацией отчета о покрытии в терминале
 uv run pytest --cov=app --cov-report=term-missing
 
-# Запуск тестов в режиме watch (требуется pytest-watch)
-uv run ptw -- --testmon
+# Запуск нагрузочного тестирования с Locust
+uv run locust -f locustfile.py
 ```
 
 После запуска тестов с HTML отчетом, откройте `htmlcov/index.html` в браузере для визуализации покрытия.
 
 ### Структура тестов
 
-- **Unit-тесты**: `tests/test_schemas/`, `tests/test_services/`
-- **Интеграционные тесты**: `tests/test_repositories/`, `tests/test_db/`
-- **API тесты**: `tests/test_routers/`, `tests/test_handlers.py`
-- **Тесты инфраструктуры**: `tests/test_redis.py`
+- **Unit-тесты**: `tests/test_schemas/`, `tests/test_services/` - тестирование бизнес-логики и схем
+- **Интеграционные тесты**: `tests/test_repositories/`, `tests/test_db/` - тестирование доступа к данным
+- **API тесты**: `tests/test_routers/` - тестирование HTTP эндпоинтов
+- **Тесты инфраструктуры**: `tests/test_infastructure/` - тестирование Redis, кэширования
+- **Тесты администратора**: `tests/test_admin.py` - тестирование панели администратора
+- **Тесты метрик**: `tests/test_metrics.py` - тестирование Prometheus метрик
+- **Тесты здоровья**: `tests/test_health.py` - тестирование health checks
 
-### Запуск тестов в Docker
-
-```bash
-# Запуск тестов в контейнере
-docker-compose exec app uv run pytest
-
-# Запуск тестов с покрытием в контейнере
-docker-compose exec app uv run pytest --cov=app
-```
 
 ### Конфигурация тестов
 
-Тесты используют отдельное окружение с настройками из `.env-test`. База данных для тестов создается и удаляется автоматически с помощью фикстур в `tests/conftest.py`.
+Тесты используют отдельное окружение с настройками из `.env-test.example`. База данных для тестов создается и удаляется автоматически с помощью фикстур в `tests/conftest.py`. Каждый тестовый класс работает с изолированной тестовой БД.
+
+### Нагрузочное тестирование
+
+Проект включает конфигурацию для нагрузочного тестирования с помощью Locust (`locustfile.py`). Для запуска:
+
+```bash
+# Запуск Locust веб-интерфейса
+uv run locust -f locustfile.py
+```
+
+### Покрытие кода
+
+Текущее покрытие кода составляет 94%. Отчет о покрытии генерируется автоматически при каждом запуске тестов. Для поддержания высокого качества кода рекомендуется:
+1. Писать тесты для всех новых функций
+2. Поддерживать покрытие не ниже 90%
+3. Использовать типизацию (mypy) для статической проверки
 
 ## 🐳 Docker
 
+Проект полностью контейнеризован с использованием Docker и Docker Compose. Включает все необходимые сервисы для разработки, тестирования и production.
+
 ### Сервисы Docker Compose
 
-1. **finance_tracker_app** - основное приложение (порт 8000)
-2. **finance_tracker_db** - PostgreSQL 17 (порт 6432)
-3. **finance_tracker_redis** - Redis 7 (порт 6379)
-4. **redis_gui** - RedisInsight для мониторинга Redis (порт 5540)
+1. **postgres** - PostgreSQL 17 (порт 6432)
+   - Основная база данных приложения
+   - Health checks для проверки доступности
+   - Постоянное хранение данных в volume
 
-### Сборка образа
+2. **redis** - Redis 7 (порт 6379)
+   - Кэширование
+   - Брокер сообщений для Celery
+   - Health checks и мониторинг
+
+3. **redis_gui** - RedisInsight (порт 5540)
+   - Веб-интерфейс для мониторинга Redis
+   - Просмотр ключей, статистики, выполнение команд
+
+4. **finance_tracker** - Основное приложение Finance Tracker (порт 8000)
+   - FastAPI приложение с автоматическим применением миграций
+   - Uvicorn с 4 воркерами для обработки запросов
+   - Интеграция со всеми зависимостями
+
+5. **celery_worker** - Celery воркер для фоновых задач
+   - Обработка асинхронных задач (отправка email, генерация отчетов)
+   - Интеграция с Redis как брокером сообщений
+
+6. **flower** - Мониторинг Celery (порт 5555)
+   - Веб-интерфейс для мониторинга задач Celery
+   - Просмотр очередей, воркеров, выполненных задач
+
+7. **prometheus** - Сбор метрик (порт 9090)
+   - Сбор метрик из приложения (/metrics endpoint)
+   - Хранение временных рядов для анализа
+
+8. **grafana** - Визуализация метрик (порт 3000)
+   - Предварительно настроенные дашборды для мониторинга приложения
+   - Графики производительности, ошибок, бизнес-метрик
+
+### Запуск всех сервисов
 
 ```bash
+# Запуск всех сервисов в фоновом режиме
+docker-compose up -d
+
+# Просмотр логов всех сервисов
+docker-compose logs -f
+
+# Просмотр статуса сервисов
+docker-compose ps
+
+# Остановка всех сервисов
+docker-compose down
+
+# Остановка с удалением volumes (осторожно!)
+docker-compose down -v
+```
+
+### Сборка образа приложения
+
+```bash
+# Сборка образа с тегом latest
 docker build -t finance-tracker:latest .
+
+# Сборка с указанием конкретной версии
+docker build -t finance-tracker:1.0.0 .
 ```
 
 ### Запуск в production
 
 Для production использования рекомендуется:
-1. Использовать `.env.prod` с production настройками
-2. Настроить reverse proxy (nginx)
-3. Включить SSL/TLS сертификаты
-4. Настроить мониторинг и логирование
+
+1. **Настройка окружения**: Создать `.env.prod` с production настройками
+   - `ENVIRONMENT=PROD`
+   - Сильный `SECRET_KEY` для JWT
+   - Production настройки БД и Redis
+
+2. **Безопасность**:
+   - Использовать reverse proxy (nginx) с SSL/TLS сертификатами
+   - Ограничить доступ к административным интерфейсам
+   - Настроить firewall правила
+
+3. **Мониторинг**:
+   - Включить централизованное логирование (ELK stack)
+   - Настроить алертинг в Grafana
+   - Мониторинг ресурсов (CPU, память, диск)
+
+4. **Масштабирование**:
+   - Использовать Docker Swarm или Kubernetes для оркестрации
+   - Настроить горизонтальное масштабирование приложения
+   - Использовать внешний Redis/PostgreSQL для высокой доступности
+
+### Dockerfile особенности
+
+- Многоступенчатая сборка для уменьшения размера образа
+- Использование uv для управления зависимостями
+- Копирование только необходимых файлов
+- Настройка non-root пользователя для безопасности
+- Оптимизация слоев для кэширования
+
+### Разработка с Docker
+
+```bash
+# Запуск только базы данных и Redis для разработки
+docker-compose up -d postgres redis redis_gui
+
+# Запуск приложения в режиме разработки (с hot reload)
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+# Выполнение команд внутри контейнера
+docker-compose exec app bash
+docker-compose exec postgres psql -U postgres -d finance_tracker
+```
 
 ## 📊 Миграции базы данных
 
@@ -412,21 +522,29 @@ uv run alembic history
 
 ## ⚙️ Конфигурация
 
-Основные настройки приложения задаются через переменные окружения:
+Основные настройки приложения задаются через переменные окружения. Проект использует несколько файлов окружения для разных сред:
 
-| Переменная | Описание | Пример |
-|------------|----------|--------|
-| `ENVIRONMENT` | Окружение (DEV/TEST/PROD) | `DEV` |
-| `DB_DRIVER` | Драйвер БД | `postgresql+asyncpg` |
-| `DB_USER` | Пользователь БД | `postgres` |
-| `DB_PASSWORD` | Пароль БД | `password` |
-| `DB_HOST` | Хост БД | `localhost` |
-| `DB_PORT` | Порт БД | `5432` |
-| `DB_NAME` | Имя БД | `finance_tracker` |
-| `REDIS_HOST` | Хост Redis | `localhost` |
-| `REDIS_PORT` | Порт Redis | `6379` |
-| `SECRET_KEY` | Секретный ключ для JWT | `your-secret-key` |
-| `ALGORITHM` | Алгоритм JWT | `HS256` |
+- `.env.example` - шаблон с описанием всех переменных
+- `.env.dev` - настройки для разработки (не коммитится)
+- `.env-test.example` - шаблон для тестового окружения
+- `.env.prod` - production настройки (не коммитится)
+
+### Основные переменные окружения
+
+| Переменная | Описание | Пример | Обязательность |
+|------------|----------|--------|----------------|
+| `ENVIRONMENT` | Окружение: `DEV`, `TEST`, `PROD` | `DEV` | Да |
+| `DB_DRIVER` | Драйвер БД (asyncpg) | `postgresql+asyncpg` | Да |
+| `DB_USER` | Пользователь БД | `postgres` | Да |
+| `DB_PASSWORD` | Пароль БД | `your_password` | Да |
+| `DB_HOST` | Хост БД | `localhost` | Да |
+| `DB_PORT` | Порт БД | `6432` (Docker) / `5432` | Да |
+| `DB_NAME` | Имя БД | `finance_tracker` | Да |
+| `REDIS_HOST` | Хост Redis | `localhost` | Да |
+| `REDIS_PORT` | Порт Redis | `6379` | Да |
+| `SECRET_KEY` | Секретный ключ для JWT | `your-secret-key-change-in-production` | Да |
+| `ALGORITHM` | Алгоритм JWT | `HS256` | Да |
+
 
 ## 🛠️ Разработка
 
@@ -437,47 +555,153 @@ uv run alembic history
 git clone <repository-url>
 cd finance-tracker
 
-# Установка зависимостей
+# Установка зависимостей с dev-группой
 uv sync --dev
 
-# Настройка pre-commit хуков (опционально)
+# Настройка pre-commit хуков (рекомендуется)
 uv run pre-commit install
 
-# Запуск линтера
+# Запуск линтера для проверки кода
 uv run ruff check .
+
+# Запуск форматтера для автоматического исправления
+uv run ruff format .
+
+# Запуск статической типизации (опционально)
+uv run mypy app/
 ```
 
-### Структура проекта
+### Структура проекта (актуальная)
 
 ```
 finance-tracker/
-├── app/                    # Исходный код приложения
-│   ├── api/               # API слой
-│   ├── core/              # Ядро приложения
-│   ├── models/            # Модели базы данных
-│   ├── repository/        # Репозитории данных
-│   ├── services/          # Бизнес-логика
-│   ├── schemas/           # Pydantic схемы
-│   ├── uow/               # Unit of Work
-│   ├── utils/             # Вспомогательные утилиты
-│   ├── connectors/        # Коннекторы
-│   └── exceptions/        # Исключения
-├── tests/                 # Тесты
-├── migrations/            # Миграции базы данных
-├── docker-compose.yml     # Docker Compose конфигурация
-├── Dockerfile            # Docker образ
-├── pyproject.toml        # Зависимости и конфигурация
-└── README.md             # Документация
+├── app/                           # Исходный код приложения
+│   ├── admin/                    # Панель администратора SQLAdmin
+│   │   ├── auth.py              # Аутентификация для админки
+│   │   └── views.py             # Представления моделей
+│   ├── api/                      # API слой
+│   │   ├── v1/                  # API версии 1
+│   │   ├── dependencies.py      # Зависимости для эндпоинтов
+│   │   └── health.py            # Health check эндпоинты
+│   ├── cache_key_builders/       # Построители ключей для кэширования
+│   ├── connectors/               # Коннекторы к внешним сервисам
+│   │   └── redis_connector.py   # Коннектор Redis
+│   ├── core/                     # Ядро приложения
+│   │   ├── database.py          # Настройки БД
+│   │   └── db_depends.py        # Зависимости БД
+│   ├── decorators/               # Декораторы
+│   │   └── retry.py             # Декоратор retry
+│   ├── email/                    # Отправка email
+│   │   ├── send_email.py        # Синхронная отправка
+│   │   └── send_email_async.py  # Асинхронная отправка
+│   ├── exceptions/               # Кастомные исключения
+│   ├── middlewares/              # Middleware
+│   │   ├── cache_middleware.py  # Middleware кэширования
+│   │   ├── log.py               # Логирование запросов
+│   │   └── metrics_middleware.py # Метрики Prometheus
+│   ├── models/                   # SQLAlchemy модели
+│   │   ├── user.py              # Модель пользователя
+│   │   ├── wallet.py            # Модель кошелька
+│   │   └── operation.py         # Модель операции
+│   ├── repository/               # Репозитории данных
+│   ├── services/                 # Бизнес-логика
+│   ├── schemas/                  # Pydantic схемы
+│   ├── tasks/                    # Фоновые задачи Celery
+│   │   └── celery_app.py        # Конфигурация Celery
+│   ├── uow/                      # Unit of Work
+│   │   └── uow.py               # Реализация UoW
+│   └── utils/                    # Вспомогательные утилиты
+│       ├── operations_filter.py  # Фильтрация операций
+│       ├── pagination.py         # Пагинация
+│       ├── prom_metrics.py       # Prometheus метрики
+│       └── sort_operations.py    # Сортировка операций
+├── tests/                        # Тесты
+│   ├── test_admin.py            # Тесты администратора
+│   ├── test_health.py           # Тесты health checks
+│   ├── test_metrics.py          # Тесты метрик
+│   ├── test_db/                 # Тесты базы данных
+│   ├── test_infastructure/      # Тесты инфраструктуры
+│   ├── test_repositories/       # Тесты репозиториев
+│   ├── test_routers/            # Тесты API эндпоинтов
+│   ├── test_schemas/            # Тесты схем
+│   └── test_services/           # Тесты сервисов
+├── grafana/                      # Конфигурация Grafana
+│   └── grafana_dashboad.json    # Дашборды Grafana
+├── prometheus/                   # Конфигурация Prometheus
+│   └── prometheus.yml           # Конфигурация Prometheus
+├── migrations/                   # Миграции базы данных (Alembic)
+├── docker-compose.yml           # Docker Compose конфигурация
+├── Dockerfile                   # Docker образ
+├── pyproject.toml               # Зависимости и конфигурация
+├── uv.lock                      # Lock-файл зависимостей
+├── pytest.ini                   # Конфигурация pytest
+├── alembic.ini                  # Конфигурация Alembic
+├── locustfile.py                # Нагрузочное тестирование
+└── README.md                    # Документация
 ```
 
-### Code Style
+### Code Style и качество кода
 
-Проект использует следующие инструменты для поддержания качества кода:
+Проект использует современные инструменты для поддержания высокого качества кода:
 
-- **Ruff** - линтер и форматтер
-- **mypy** - статическая типизация (опционально)
-- **pytest** - тестирование
-- **pre-commit** - pre-commit хуки
+#### Линтинг и форматирование
+- **Ruff** - ультрабыстрый линтер и форматтер Python
+  ```bash
+  uv run ruff check .          # Проверка стиля кода
+  uv run ruff format .         # Автоматическое форматирование
+  uv run ruff check --fix .    # Автоматическое исправление ошибок
+  ```
+
+#### Статическая типизация
+- **mypy** - статическая проверка типов
+  ```bash
+  uv run mypy app/             # Проверка типов в приложении
+  uv run mypy --strict app/    # Строгая проверка типов
+  ```
+
+#### Тестирование
+- **pytest** - фреймворк для тестирования
+- **pytest-cov** - измерение покрытия кода
+- **pytest-asyncio** - поддержка асинхронных тестов
+
+#### Pre-commit хуки
+- **pre-commit** - автоматическая проверка перед коммитом
+  ```bash
+  uv run pre-commit install    # Установка хуков
+  uv run pre-commit run --all-files  # Запуск проверки для всех файлов
+  ```
+
+Конфигурация pre-commit включает:
+- Проверка Ruff (линтер)
+- Форматирование Ruff (форматтер)
+- Проверка mypy (типизация)
+- Проверка trailing whitespace
+- Проверка конца файлов
+
+### Рабочий процесс разработки
+
+1. **Создание ветки** для новой фичи/исправления
+2. **Установка зависимостей** через `uv sync`
+3. **Написание кода** с соблюдением code style
+4. **Запуск тестов** перед коммитом
+5. **Запуск pre-commit** для автоматической проверки
+6. **Создание Pull Request** с описанием изменений
+
+### Полезные команды для разработки
+
+```bash
+# Запуск приложения в режиме разработки
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Запуск миграций базы данных
+uv run alembic upgrade head
+
+# Создание новой миграции
+uv run alembic revision --autogenerate -m "Описание изменений"
+
+# Проверка покрытия кода тестами
+uv run pytest --cov=app --cov-report=term-missing
+```
 
 ## 📈 Производительность
 
@@ -489,61 +713,57 @@ finance-tracker/
 4. **Connection Pooling** - пул соединений с БД
 5. **Лимитирование** - защита от чрезмерной нагрузки
 
-## 🔧 Утилиты
-
-### Проверка здоровья системы
-
-```bash
-curl http://localhost:8000/health
-```
-
-Ответ:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "services": {
-    "database": "connected",
-    "redis": "connected"
-  }
-}
-```
+## 🔧 Утилиты и мониторинг
 
 ### Проверка подключения к БД
 
 ```bash
-curl http://localhost:8000/handlers/check-db
+curl http://localhost:8000/health/check-db
 ```
 
-## 🤝 Вклад в проект
+### Получение метрик Prometheus
 
-1. Форкните репозиторий
-2. Создайте ветку для вашей фичи (`git checkout -b feature/amazing-feature`)
-3. Закоммитьте изменения (`git commit -m 'Add amazing feature'`)
-4. Запушьте ветку (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
+```bash
+curl http://localhost:8000/metrics
+```
 
-### Требования к коду
+### Доступ к панели администратора
 
-- Все новые функции должны быть покрыты тестами
-- Код должен соответствовать стилю проекта (ruff)
-- Документация должна быть обновлена при необходимости
-- Миграции БД должны быть обратно совместимы
+Откройте в браузере: `http://localhost:8000/admin`
 
-## 📄 Лицензия
+### Мониторинг Celery задач (Flower)
 
-Этот проект распространяется под лицензией MIT. Подробнее см. в файле [LICENSE](LICENSE).
+Откройте в браузере: `http://localhost:5555`
 
-## 📞 Контакты и поддержка
+### Визуализация метрик (Grafana)
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/finance-tracker/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/finance-tracker/discussions)
+Откройте в браузере: `http://localhost:3000` (логин: admin, пароль: admin)
 
-## 🙏 Благодарности
 
-- FastAPI сообществу за отличный фреймворк
-- SQLAlchemy за мощный ORM
-- Всем контрибьюторам проекта
+### Начало работы
+
+```bash
+# Клонирование форка
+git clone https://github.com/your-username/finance-tracker.git
+cd finance-tracker
+
+# Установка зависимостей
+uv sync
+
+# Создание ветки для разработки
+git checkout -b feature/my-new-feature
+
+# После внесения изменений
+uv run pytest  # Запуск тестов
+uv run ruff check .  # Проверка code style
+uv run mypy app/     # Проверка типов
+
+# Создание коммита и push
+git add .
+git commit -m "feat: add new feature for better user experience"
+git push origin feature/my-new-feature
+```
+
 
 ## ❓ Часто задаваемые вопросы (FAQ)
 
@@ -555,44 +775,72 @@ uv run alembic downgrade base
 
 # Применить миграции заново
 uv run alembic upgrade head
+
+# Альтернативно, удалить и создать базу заново (Docker)
+docker-compose down -v
+docker-compose up -d postgres
+uv run alembic upgrade head
 ```
 
 ### Q: Как добавить новую модель в базу данных?
 A:
-1. Создайте модель в `app/models/`
+1. Создайте модель в `app/models/` (наследуйтесь от `Base`)
 2. Импортируйте модель в `app/models/__init__.py`
-3. Создайте автоматическую миграцию:
+3. Создайте Pydantic схему в `app/schemas.py`
+4. Создайте автоматическую миграцию:
 ```bash
 uv run alembic revision --autogenerate -m "add_new_model"
 ```
-4. Примените миграцию:
+5. Примените миграцию:
 ```bash
 uv run alembic upgrade head
 ```
 
 ### Q: Как работает кэширование в приложении?
-A: Приложение использует Redis для кэширования. Кэш автоматически инвалидируется при изменении данных. Время жизни кэша настраивается в декораторах `@FastAPICache.decorate()`.
+A: Приложение использует Redis для кэширования через `fastapi-cache2`. Кэш автоматически инвалидируется при изменении данных. Время жизни кэша настраивается в декораторах `@FastAPICache.decorate(expire=300)`. Ключи кэша строятся с помощью классов в `app/cache_key_builders/`.
 
 ### Q: Как настроить лимитирование запросов?
-A: Лимитирование настроено через `fastapi-limiter`. Настройки находятся в `app/api/dependencies.py`. По умолчанию: 10 запросов в секунду на IP.
+A: Лимитирование настроено через `fastapi-limiter` и `pyrate_limiter`. Настройки находятся в `app/api/v1/users.py` и `app/api/dependencies.py`. По умолчанию: 10 запросов в секунду на IP для аутентификации, 100 запросов в минуту для других endpoint'ов.
 
 ### Q: Как добавить новый endpoint API?
 A:
 1. Создайте роутер в `app/api/v1/` или добавьте endpoint в существующий роутер
-2. Реализуйте бизнес-логику в соответствующем сервисе
-3. Добавьте зависимости и обработку ошибок
-4. Напишите тесты для нового endpoint'а
+2. Реализуйте бизнес-логику в соответствующем сервисе (`app/services/`)
+3. Добавьте зависимости (аутентификация, валидация) через FastAPI Depends
+4. Настройте кэширование и лимитирование при необходимости
+5. Напишите тесты для нового endpoint'а в `tests/test_routers/`
 
 ### Q: Как работает аутентификация?
-A: Используется JWT (JSON Web Tokens). При успешном входе выдается access token, который нужно передавать в заголовке `Authorization: Bearer <token>`. Токен действителен 30 минут.
+A: Используется JWT (JSON Web Tokens) через OAuth2 password flow. При успешном входе через `/api/v1/users/token` выдается access token, который нужно передавать в заголовке `Authorization: Bearer <token>`. Токен действителен 15 минут (настраивается через `ACCESS_TOKEN_EXPIRE_MINUTES`).
+
+### Q: Как работает панель администратора?
+A: Панель администратора построена на SQLAdmin и доступна по адресу `/admin`. Для доступа требуется аутентификация через JWT. Админка предоставляет CRUD интерфейс для всех моделей (User, Wallet, Operation) с поиском, фильтрацией и экспортом данных.
 
 ### Q: Как настроить приложение для production?
 A:
 1. Создайте `.env.prod` с production настройками
 2. Измените `ENVIRONMENT=PROD`
-3. Используйте сильный `SECRET_KEY`
-4. Настройте SSL/TLS через reverse proxy (nginx)
-5. Включите мониторинг и логирование
+3. Используйте сильный `SECRET_KEY` (минимум 32 символа)
+4. Включите мониторинг (Prometheus/Grafana) и централизованное логирование
+5. Используйте Docker Compose production конфигурацию
+
+### Q: Как работают фоновые задачи (Celery)?
+A: Celery используется для асинхронной обработки длительных операций (отправка email, генерация отчетов). Задачи определяются в `app/tasks/`, брокер - RabbitMQ на порту 15672. Для мониторинга используется Flower на порту 5555.
+
+### Q: Как добавить новую метрику Prometheus?
+A:
+1. Создайте метрику в `app/utils/prom_metrics.py`
+2. Обновите middleware в `app/middlewares/metrics_middleware.py`
+3. Метрика будет автоматически доступна на `/metrics` endpoint
+
+### Q: Как работает Unit of Work (UoW) паттерн?
+A: UoW обеспечивает целостность транзакций. Все операции в рамках одного бизнес-процесса выполняются в одной транзакции. При ошибке происходит откат всех изменений. Реализация находится в `app/uow/uow.py`.
+
+
+Приложение поддерживает как синхронную (`app/email/send_email.py`), так и асинхронную отправку (`app/email/send_email_async.py`).
+
+### Q: Как работает фильтрация и пагинация операций?
+A: Фильтрация реализована в `app/utils/operations_filter.py`, пагинация - в `app/utils/pagination.py`. Endpoint `/api/v1/operations/history` поддерживает параметры: `offset`, `limit`, `sort_by`, `sort_dir`, `start_date`, `end_date`, `operation_type`, `min_amount`, `max_amount`.
 
 ## 🐛 Поиск и устранение неисправностей
 
@@ -619,31 +867,3 @@ A:
 - Убедитесь, что тестовая БД доступна
 - Проверьте наличие `.env-test` файла
 - Запустите тесты с флагом `-v` для детального вывода
-
-## 📈 Дальнейшее развитие
-
-Планируемые улучшения:
-- [ ] Добавление вебсокетов для real-time уведомлений
-- [ ] Интеграция с платежными системами
-- [ ] Генерация PDF отчетов
-- [ ] Мобильное приложение (React Native)
-- [ ] Machine learning для анализа расходов
-- [ ] Мультивалютная поддержка
-- [ ] API для сторонних разработчиков
-
-## 🤝 Сообщество
-
-Присоединяйтесь к нашему сообществу:
-- [GitHub Discussions](https://github.com/yourusername/finance-tracker/discussions) - обсуждение идей и вопросов
-- [GitHub Issues](https://github.com/yourusername/finance-tracker/issues) - баг-репорты и feature requests
-- [Discord](https://discord.gg/your-invite) - чат для разработчиков
-
-## 🌟 Звезды и поддержка
-
-Если этот проект был полезен для вас, поставьте звезду на GitHub! Это помогает проекту развиваться.
-
----
-
-**Примечание**: Этот проект находится в активной разработке. API может изменяться между минорными версиями. Перед обновлением проверяйте [CHANGELOG.md](CHANGELOG.md) (если есть).
-
-**Лицензия**: MIT © 2024 Finance Tracker Team
