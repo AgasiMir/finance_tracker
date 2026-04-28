@@ -76,29 +76,28 @@ class OperationRepository:
         Returns:
             list[OperationsHistory]: Список операций, преобразованных в схему.
         """
+
         filters = []
+
+        try:
+            sort_column = getattr(Operation, sort_param)
+        except AttributeError:
+            raise ValueError(f"Column {sort_param} does not exist")
+
+        if dir == "desc":
+            sort_column = desc(sort_column)
 
         if filter:
             filters.append(Operation.type == filter)
 
-        if dir == "asc":
-            operations = await self.db.scalars(
-                select(Operation)
-                .join(Wallet, Operation.wallet_id == Wallet.id)
-                .where(*filters, Wallet.user_id == user_id)
-                .order_by(eval(f"Operation.{sort_param}"))
-                .limit(limit)
-                .offset(offset)
-            )
-        elif dir == "desc":
-            operations = await self.db.scalars(
-                select(Operation)
-                .join(Operation.wallet)
-                .where(*filters, Wallet.user_id == user_id)
-                .order_by(desc(eval(f"Operation.{sort_param}")))
-                .limit(limit)
-                .offset(offset)
-            )
+        operations = await self.db.scalars(
+            select(Operation)
+            .join(Wallet, Operation.wallet_id == Wallet.id)
+            .where(*filters, Wallet.user_id == user_id)
+            .order_by(sort_column)
+            .limit(limit)
+            .offset(offset)
+        )
         return [self._from_db(obj) for obj in operations.all()]
 
     async def add_money(
@@ -124,6 +123,7 @@ class OperationRepository:
         Raises:
             WalletNotFoundException: Если кошелек с указанным именем не найден.
         """
+
         wallet = await self._get_wallet(operation.wallet_name, user_id)
         if not wallet:
             raise WalletNotFoundException(operation.wallet_name)
@@ -167,6 +167,7 @@ class OperationRepository:
             WalletNotFoundException: Если кошелек с указанным именем не найден.
             InsufficientFundsException: Если на балансе недостаточно средств.
         """
+
         wallet = await self._get_wallet(operation.wallet_name, user_id)
         if not wallet:
             raise WalletNotFoundException(operation.wallet_name)
@@ -209,6 +210,7 @@ class OperationRepository:
             SameWalletException: Если попытка перевода на тот же кошелек.
             InsufficientFundsException: Если на балансе отправителя недостаточно средств.
         """
+
         wallet_from = await self._get_wallet(transfer.wallet_from, user_id)
 
         if not wallet_from:

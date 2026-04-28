@@ -16,7 +16,7 @@ from app.exceptions.fastapi_exceptions import (
     JWTExpiredSignatureException,
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/token")
 
 
 async def get_db():
