@@ -1,25 +1,25 @@
 services:
   
-  # finance_tracker:
-  #   build: .
-  #   container_name: finance_tracker
-  #   env_file: .env.dev
-  #   ports:
-  #     - "8000:8000"
-  #   networks:
-  #     - finance_tracker_network
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   restart: unless-stopped
-  #   command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
+  finance_tracker:
+    build: .
+    container_name: finance_tracker
+    env_file: .env.prod
+    ports:
+      - "8000:8000"
+    networks:
+      - finance_tracker_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4"
 
 
   postgres:
     image: postgres:17
     container_name: finance_tracker_db
     env_file: 
-      .env.dev
+      .env.prod
     ports:
       - "6432:5432"  
     volumes:
@@ -72,7 +72,7 @@ services:
       networks:
         - finance_tracker_network 
       restart: unless-stopped
-      env_file: .env.dev
+      env_file: .env.prod
       healthcheck:
         test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
         interval: 10s
@@ -84,7 +84,7 @@ services:
     build: .
     container_name: finance_tracker_celery
     env_file:
-      - .env.dev
+      - .env.prod
     networks:
       - finance_tracker_network
     depends_on:
@@ -144,7 +144,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.dev
+      - .env.prod
     networks:
       - finance_tracker_network
 
