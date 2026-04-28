@@ -283,7 +283,7 @@ FastAPI автоматически генерирует полную интер�
 
    - Перейти по `http://localhost:3000` (если запущен)
    - В меню Data sources выбрать Prometheus 
-   - Указать http://prometheus:9090 в Prometheus server URL
+   - Указать `http://prometheus:9090` в Prometheus server URL
    - Нажать Save&Test
    - В меню Dashboards выбрать Import 
    - Вставить содержимое файла grafana_dashboad.json и нажать Load, а затем Import
